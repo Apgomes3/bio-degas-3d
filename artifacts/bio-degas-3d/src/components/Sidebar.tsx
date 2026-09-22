@@ -73,10 +73,27 @@ export function Sidebar() {
             </Section>
 
             <Section title="Dispersion Trays">
+              <label className="flex items-center justify-between gap-3 rounded-md border border-border bg-muted/30 px-3 py-2">
+                <span>
+                  <span className="block text-xs font-semibold text-foreground">Automatic quantity by tank length</span>
+                  <span className="block text-[10px] text-muted-foreground">
+                    Uses available length, 3405 mm trays, and the configured gap.
+                  </span>
+                </span>
+                <input
+                  type="checkbox"
+                  checked={store.trayCountAuto}
+                  onChange={(event) => store.updateParams({ trayCountAuto: event.target.checked })}
+                  data-testid="checkbox-auto-tray-count"
+                  className="rounded border-border text-primary focus:ring-primary"
+                />
+              </label>
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-foreground">Tray items</p>
-                  <p className="text-xs text-muted-foreground">{store.trays.length} configured · max 4</p>
+                  <p className="text-xs text-muted-foreground">
+                    {store.trays.length} configured · max 4 · {store.trayCountAuto ? 'automatic' : 'manual'}
+                  </p>
                 </div>
                 <button
                   type="button"
@@ -556,8 +573,8 @@ function SaveManager() {
     const newSave = { id, name: saveName, date: new Date().toISOString() };
     
     // Extract store data to save
-    const { envelope, wallThickness, accessMin, crate, nominalStackHeight, maxStackHeight, stackFillDirection, rows, trayCount, trayGap, waterLevel, requiredCrates, stacks, trays, pipeConnections } = store;
-    const data = { envelope, wallThickness, accessMin, crate, nominalStackHeight, maxStackHeight, stackFillDirection, rows, trayCount, trayGap, waterLevel, requiredCrates, stacks, trays, pipeConnections };
+    const { envelope, wallThickness, accessMin, crate, nominalStackHeight, maxStackHeight, stackFillDirection, rows, trayCount, trayCountAuto, trayGap, waterLevel, requiredCrates, stacks, trays, pipeConnections } = store;
+    const data = { envelope, wallThickness, accessMin, crate, nominalStackHeight, maxStackHeight, stackFillDirection, rows, trayCount, trayCountAuto, trayGap, waterLevel, requiredCrates, stacks, trays, pipeConnections };
     
     localStorage.setItem(`biodegas_save_${id}`, JSON.stringify(data));
     localStorage.setItem('biodegas_saves', JSON.stringify([...list, newSave]));
@@ -581,8 +598,8 @@ function SaveManager() {
   };
 
   const exportJSON = () => {
-    const { envelope, wallThickness, accessMin, crate, nominalStackHeight, maxStackHeight, stackFillDirection, rows, trayCount, trayGap, waterLevel, requiredCrates, stacks, trays, pipeConnections } = store;
-    const data = { envelope, wallThickness, accessMin, crate, nominalStackHeight, maxStackHeight, stackFillDirection, rows, trayCount, trayGap, waterLevel, requiredCrates, stacks, trays, pipeConnections };
+    const { envelope, wallThickness, accessMin, crate, nominalStackHeight, maxStackHeight, stackFillDirection, rows, trayCount, trayCountAuto, trayGap, waterLevel, requiredCrates, stacks, trays, pipeConnections } = store;
+    const data = { envelope, wallThickness, accessMin, crate, nominalStackHeight, maxStackHeight, stackFillDirection, rows, trayCount, trayCountAuto, trayGap, waterLevel, requiredCrates, stacks, trays, pipeConnections };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");

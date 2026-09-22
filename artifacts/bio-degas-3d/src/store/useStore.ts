@@ -72,6 +72,7 @@ export interface ProjectState {
   stackFillDirection: 'bottom' | 'top';
   rows: number;
   trayCount: number;
+  trayCountAuto: boolean;
   trayGap: number;
   waterLevel: number;
   requiredCrates: number;
@@ -112,6 +113,7 @@ const DEFAULT_REFERENCE = {
   stackFillDirection: 'bottom' as const,
   rows: 2,
   trayCount: 2,
+  trayCountAuto: true,
   trayGap: 100,
   waterLevel: 1590,
   requiredCrates: 58,
@@ -281,6 +283,27 @@ function generateTrays(state: Partial<ProjectState>) {
   return newTrays;
 }
 
+function calculateAutomaticTrayCount(state: Partial<ProjectState>) {
+  const s = { ...DEFAULT_REFERENCE, ...state } as ProjectState;
+  const internalLength = s.envelope.length - 2 * s.wallThickness;
+  const availableLength = Math.max(0, internalLength - s.accessMin);
+  const standardTrayLength = 3405;
+  return Math.max(
+    0,
+    Math.min(4, Math.floor((availableLength + s.trayGap) / (standardTrayLength + s.trayGap))),
+  );
+}
+
+function reconcileAutomaticTrays(state: Partial<ProjectState>, existingTrays: Tray[]) {
+  const generated = generateTrays(state);
+  return generated.map((tray, index) => {
+    const existing = existingTrays[index];
+    return existing
+      ? { ...tray, ...existing, x: tray.x }
+      : tray;
+  });
+}
+
 export const useStore = create<ProjectState>((set, get) => ({
   ...DEFAULT_REFERENCE,
   stacks: generateStacks(DEFAULT_REFERENCE),
@@ -292,12 +315,18 @@ export const useStore = create<ProjectState>((set, get) => ({
     const next = { ...state, ...params };
     // If layout affecting params changed, we might need to regenerate
     const needsRegen = ['envelope', 'wallThickness', 'accessMin', 'crate', 'rows', 'requiredCrates', 'nominalStackHeight', 'maxStackHeight'].some(k => k in params);
-    const traysNeedRegen = ['trayCount', 'trayGap'].some(k => k in params);
+    const trayLengthInputsChanged = ['envelope', 'wallThickness', 'accessMin', 'trayGap'].some(k => k in params);
+    const autoTrayLayoutChanged = next.trayCountAuto
+      && (trayLengthInputsChanged || params.trayCountAuto === true);
+    if (autoTrayLayoutChanged) {
+      next.trayCount = calculateAutomaticTrayCount(next);
+      next.trays = reconcileAutomaticTrays(next, state.trays);
+    }
     
     if (needsRegen) {
       next.stacks = generateStacks(next);
     }
-    if (traysNeedRegen) {
+    if (!autoTrayLayoutChanged && ['trayCount', 'trayGap'].some(k => k in params)) {
       next.trays = generateTrays(next);
     }
     
@@ -378,6 +407,7 @@ export const useStore = create<ProjectState>((set, get) => ({
     return {
       trays: [...state.trays, tray],
       trayCount: state.trays.length + 1,
+      trayCountAuto: false,
       selectedId: tray.id,
     };
   }),
@@ -388,6 +418,7 @@ export const useStore = create<ProjectState>((set, get) => ({
     return {
       trays,
       trayCount: trays.length,
+      trayCountAuto: false,
       selectedId: state.selectedId === id ? null : state.selectedId,
     };
   }),
