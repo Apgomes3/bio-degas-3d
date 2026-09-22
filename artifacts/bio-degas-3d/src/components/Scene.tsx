@@ -126,7 +126,7 @@ function FrpAnglePair({
         <boxGeometry args={[leg, thickness, span]} />
         <meshStandardMaterial color={color} roughness={0.42} metalness={0.08} />
       </mesh>
-      <mesh position={[-thickness / 2, -leg / 2, 0]}>
+      <mesh position={[-thickness / 2, leg / 2, 0]}>
         <boxGeometry args={[thickness, leg, span]} />
         <meshStandardMaterial color={color} roughness={0.42} metalness={0.08} />
       </mesh>
@@ -134,7 +134,7 @@ function FrpAnglePair({
         <boxGeometry args={[leg, thickness, span]} />
         <meshStandardMaterial color={color} roughness={0.42} metalness={0.08} />
       </mesh>
-      <mesh position={[thickness / 2, -leg / 2, 0]}>
+      <mesh position={[thickness / 2, leg / 2, 0]}>
         <boxGeometry args={[thickness, leg, span]} />
         <meshStandardMaterial color={color} roughness={0.42} metalness={0.08} />
       </mesh>
