@@ -1,0 +1,60 @@
+BIO/DEGAS PLENUM  ·  ENGINEERING REFERENCE
+REV 01  ·  PAGE 3 / 12
+02 / INPUTS
+Design basis & governed constants
+Coordination reference — not a fabrication release. Verify project engineering.
+EDP · Bio/Degas
+The current media result is the only sizing input. The UI resolves the first finite value in this precedence order:
+Precedence
+Field
+Conversion
+1
+preview.media.installed_media_m3
+Use m³ directly
+2
+preview.media.installed_media_l
+Divide litres by 1000
+3
+preview.media.required_media_m3
+Use m³ directly
+4
+preview.media.required_media_l
+Divide litres by 1000
+Governing constants
+Parameter
+Value
+Role
+Media capacity
+0.238 m³ / crate
+crate count denominator
+Crate envelope
+1040 L × 740 W × 530 H mm
+L × W × H
+Maximum stack
+4 crates
+hard vertical cap
+Recommended stack
+3 crates high
+default candidate
+Minimum wall
+80 mm
+external-to-internal allowance
+Dispersion tray
+3405 × 2005 × 620 mm
+L × W × H
+Tray separation
+100 mm
+between trays, longitudinal
+Tray-to-crate gap
+100 mm minimum
+vertical clearance
+End access
+800 mm minimum
+usable length deduction
+Transport envelope
+9000 × 2250 × 2500 mm
+external L × W × H
+KEY CONVENTION
+The implemented assessment uses internalHeight = externalHeight − wall (one wall subtraction), while internalLength 
+and internalWidth subtract two wall thicknesses. The server is authoritative for finite, positive dimensions and all fit 
+checks.

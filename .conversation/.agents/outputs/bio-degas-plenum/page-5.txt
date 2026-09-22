@@ -1,0 +1,70 @@
+BIO/DEGAS PLENUM  ·  ENGINEERING REFERENCE
+REV 01  ·  PAGE 5 / 12
+04 / REFERENCE CASE
+Worked example — 58 crates
+Coordination reference — not a fabrication release. Verify project engineering.
+EDP · Bio/Degas
+This is the governed regression example used by the current tests and is the preferred visual reference for the 
+first 3D scene.
+Check
+Calculation
+Result
+Media basis
+ceil(13.804 ÷ 0.238)
+58 crates
+Nominal arrangement
+2 rows × 10 positions × 3 high
+20 positions / nominal 60
+Actual stack quantities
+18 × 3 + 2 × 2
+58 crates
+Recommended external
+candidate selection
+8360 × 2240 × 2390 mm
+Internal basis
+L=8360−160; W=2240−160; H=2390−80
+8200 × 2080 × 2310 mm
+Vertical fit
+2310−620−100 = 1590; floor(1590÷530)
+3 layers
+Capacity
+crate positions × min(3,3)
+60 crates
+Trays
+2×3405 + 100
+6910 mm occupied
+Access
+end allowance
+800 mm
+Validation
+wall / envelope / tray / quantities
+PASS / no errors
+800 mm ACCESS
+S01
+S02
+S03
+S04
+S05
+S06
+S07
+S08
+S09
+S10
+S11
+S12
+S13
+S14
+S15
+S16
+S17
+S18
+S19
+S20
+TRAY 1
+TRAY 2
+8360 mm EXTERNAL LENGTH
+2240 mm
+X / longitudinal
+Y / transverse
+PASS BASIS
+Wall 80 mm ✓ · tray gap 100 mm ✓ · two trays fit ✓ · capacity 60 ≥ required 58 ✓ · stack quantities reconcile ✓

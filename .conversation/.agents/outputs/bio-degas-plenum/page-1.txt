@@ -1,0 +1,40 @@
+BIO/DEGAS PLENUM  ·  ENGINEERING REFERENCE
+REV 01  ·  PAGE 1 / 12
+E N G I N E E R I N G / V I S U A L I Z AT I O N R E F E R E N C E
+Bio/Degas Plenum
+Arrangement & specification reference
+Source-accurate coordination basis for a future 3D implementation
+CURRENT IMPLEMENTATION + FUTURE 3D CONTRACT
+800 mm ACCESS
+S01
+S02
+S03
+S04
+S05
+S06
+S07
+S08
+S09
+S10
+S11
+S12
+S13
+S14
+S15
+S16
+S17
+S18
+S19
+S20
+TRAY 1
+TRAY 2
+8360 mm EXTERNAL LENGTH
+2240 mm
+58-CRATE WORKED EXAMPLE
+8360 × 2240 × 2390 mm external envelope · 2 rows · 3-high nominal · 2 dispersion trays · capacity 60
+Document status  COORDINATION REFERENCE
+Revision 01  ·  22 September 2026  ·  Prepared for 3D project handoff
+NOT A FABRICATION RELEASE
+Verify structural, FRP, hydraulic, lifting, transport and code requirements before manufacture.
+Coordination reference — not a fabrication release. Verify project engineering.
+EDP · Bio/Degas

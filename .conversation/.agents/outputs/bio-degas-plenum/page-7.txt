@@ -1,0 +1,56 @@
+BIO/DEGAS PLENUM  ·  ENGINEERING REFERENCE
+REV 01  ·  PAGE 7 / 12
+06 / IMPLEMENTED VISUAL
+Top view — plan arrangement
+Coordination reference — not a fabrication release. Verify project engineering.
+EDP · Bio/Degas
+IMPLEMENTED
+The current top SVG shows external shell, internal clear envelope, amber access zone, 
+stack rectangles and purple tray outlines. It is not a 3D model.
+800 mm ACCESS
+S01
+S02
+S03
+S04
+S05
+S06
+S07
+S08
+S09
+S10
+S11
+S12
+S13
+S14
+S15
+S16
+S17
+S18
+S19
+S20
+TRAY 1
+TRAY 2
+8360 mm EXTERNAL LENGTH
+2240 mm
+X / longitudinal
+Y / transverse
+Visual element
+Current rendering semantic
+3D handoff
+Shell
+Blue #dbeafe, navy #1e3a5f outline
+Rectangular FRP shell placeholder
+Access
+Amber #fef3c7 / dashed #d97706
+Non-equipment service clearance
+Stacks
+740 × 1040 plan rectangles; x by column, y by row
+Instance crate meshes by stack 
+metadata
+Trays
+3405 × 2005 purple dashed outlines; 100 separation
+Solid tray volumes
+Dimensions
+External length/width callouts
+Dimension annotations / measurement 
+tool

@@ -1,0 +1,41 @@
+BIO/DEGAS PLENUM  ·  ENGINEERING REFERENCE
+REV 01  ·  PAGE 2 / 12
+01 / READ FIRST
+Purpose, scope & status key
+Coordination reference — not a fabrication release. Verify project engineering.
+EDP · Bio/Degas
+This document translates the implemented Bio/Degas plenum designer into a self-contained 
+arrangement and visualization contract. It is intended for engineering coordination and a separate 
+3D project—not for fabrication release.
+IN SCOPE
+Media-driven crate quantity; recommended 
+arrangement; tank/tray/access dimensions; top and 
+longitudinal section semantics; validation; persistence 
+and stale-result behavior; future 3D scene mapping.
+OUT OF SCOPE
+Structural calculations, FRP laminate schedule, 
+hydrostatics, hydraulics, drainage/overflow, lifting, 
+transport certification, fire/code approval and 
+fabrication tolerances.
+Status legend
+Badge
+Meaning
+Use in this reference
+IMPLEMENTED
+Present in current React/SVG designer or 
+server contract.
+Treat as current behavior.
+DERIVED
+Equation or value calculated from current 
+constants.
+Reproduce exactly.
+FUTURE 3D
+Recommended scene/interaction translation.
+Do not claim it exists today.
+CONFIRM
+Engineering decision outside this tool.
+Requires project review.
+READING RULE
+Solid linework represents current implemented visual semantics. Dashed or “FUTURE 3D” badges identify a proposed 
+translation only. The source of truth remains the current media result, saved layout and server validation.
+Source: BioDegasPlenumDesigner.tsx; bio-degas-plenum-crate-sizing.md; bio-degas-plenum-product-boundary.md

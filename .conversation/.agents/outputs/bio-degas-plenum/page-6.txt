@@ -1,0 +1,28 @@
+BIO/DEGAS PLENUM  ·  ENGINEERING REFERENCE
+REV 01  ·  PAGE 6 / 12
+05 / SPATIAL CONTRACT
+Coordinate system & datums
+Coordination reference — not a fabrication release. Verify project engineering.
+EDP · Bio/Degas
+Future 3D must preserve the semantic axes already implied by the SVG. The coordinate origin below is a 
+recommended internal datum; confirm external datum and fabrication datums with the project team.
+X / tank length / longitudinal
+Y / tank width / transverse
+Z / vertical
+Origin (0,0,0)
+Recommended internal origin: internal bottom, access-side longitudinal datum.
+Access direction → +X
+Coordinate / entity
+Placement rule
+Tank internal box
+0 ≤ X ≤ internalLength; 0 ≤ Y ≤ internalWidth; 0 ≤ Z ≤ internalHeight
+Stack S(i)
+X = wall + actualAccessLength + column×740; Y = wall + row×1040
+Crate level
+Z base = level × 530; level 0 sits on internal bottom; lower crates remain fixed
+Tray start
+X = wall + actualAccessLength + max(0,(occupiedEquipmentLength−totalTrayLength)/2)
+Tray vertical
+tray bottom z = internalHeight − trayHeight; tray top z = internalHeight
+Water
+Internal footprint; top at internal bottom + water_level_mm

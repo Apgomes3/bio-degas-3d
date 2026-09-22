@@ -1,0 +1,41 @@
+BIO/DEGAS PLENUM  ·  ENGINEERING REFERENCE
+REV 01  ·  PAGE 10 / 12
+09 / PLACEMENT
+Tray, access & clearance equations
+Coordination reference — not a fabrication release. Verify project engineering.
+EDP · Bio/Degas
+Plan placement
+Symbol
+Implemented equation
+internalLength
+externalLength − 2×wall
+internalWidth
+externalWidth − 2×wall
+occupiedCrateLength
+max(column+1) × 740
+totalTrayLength
+trayCount×3405 + max(0,trayCount−1)×100
+occupiedEquipmentLength
+max(occupiedCrateLength,totalTrayLength)
+actualAccessLength
+max(0, internalLength − occupiedEquipmentLength)
+trayStartX
+wall + actualAccessLength + max(0,(occupiedEquipmentLength−totalTrayLength)/2)
+Fit and vertical equations
+Check
+Equation / rule
+crateLengthCapacity
+max(0, floor((internalLength−800) ÷ 740))
+crateWidthCapacity
+max(0, floor(internalWidth ÷ 1040))
+verticalAvailable
+internalHeight − 620 − trayGap
+verticalCapacity
+max(0, min(4, floor(verticalAvailable ÷ 530)))
+capacity
+crateLengthCapacity × effectiveRows × min(stack_height, verticalCapacity)
+tray condition
+internalWidth ≥ 2005 and internalLength−800 ≥ totalTrayLength
+IMPORTANT
+The nominal 800 mm access is a minimum deduction in capacity and tray fit. The visual actualAccessLength is 
+recomputed from the occupied equipment footprint and may be larger.

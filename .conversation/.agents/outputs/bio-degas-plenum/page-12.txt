@@ -1,0 +1,50 @@
+BIO/DEGAS PLENUM  ·  ENGINEERING REFERENCE
+REV 01  ·  PAGE 12 / 12
+11 / HANDOFF
+Future 3D contract & appendix
+Coordination reference — not a fabrication release. Verify project engineering.
+EDP · Bio/Degas
+FUTURE 3D RECOMMENDATION
+No 3D scene, camera, mesh or WebGL implementation exists in the current application. The hierarchy below is 
+a translation contract for a separate project.
+Scene node
+Responsibilities
+Scene / PlenumTank
+External L×W×H; shell placeholder; wall thickness metadata
+InternalVolume
+Clipping volume and internal coordinate frame
+AccessZone
+Actual access length; amber conceptual clearance
+EquipmentZone
+Container for trays and crate stacks
+DispersionTrays / Tray_1…N
+3405×2005×620 solids; longitudinal 100 gap
+CrateStacks / Stack_S01…
+Instances from row, column, quantity; 740×1040×530 each
+WaterVolume
+Internal footprint; level above internal bottom
+Dimensions / Annotations
+L/W/H, wall, access, gap, trays, water and stack labels
+Selection / InteractionOverlay
+Stack highlight, row section filter, clearance diagnostics
+PLACEMENT CONTRACT
+x = wall + access + column×740; y = wall + row×1040; zbase = level×530 from internal bottom. Tray bottom z = 
+internalHeight − trayHeight; tray top z = internalHeight. Preserve lower crate elevations when quantity decreases. 
+Future 3D features remain recommendations.
+Quick reference / glossary
+Term
+Definition
+External envelope
+Tank outside dimensions; transport limit applies
+Internal envelope
+Length/width subtract two walls; height subtracts one wall in implemented assessment
+Stack position
+Unique row:column top-view coordinate
+Tray gap
+Vertical tray-to-crate minimum, 100 mm
+Access length
+End clearance deduction, 800 mm minimum
+Water level
+Bounded visual fill measured from internal bottom
+PIM promotion
+Explicit creation of reusable FRP tank product from immutable source snapshot

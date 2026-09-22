@@ -1,0 +1,36 @@
+BIO/DEGAS PLENUM  ·  ENGINEERING REFERENCE
+REV 01  ·  PAGE 11 / 12
+10 / CONTROL LOGIC
+Validation, state & persistence
+Coordination reference — not a fabrication release. Verify project engineering.
+EDP · Bio/Degas
+Validation matrix
+Layer
+Checks
+Client assessment
+wall ≥80; external limits; tray count 1/2; tray fit; gap ≥100; stack height ≤ vertical capacity; capacity ≥ 
+required; grid bounds; no duplicate row:column; quantities 1…limit; quantity sum; water bounds
+Server authority
+finite positive dimensions; wall*2 < length/width; rows 1/2; stack 1…4; trays 1/2; gap ≥100; tray fit; 
+capacity; nonempty valid stacks; source crate count recomputed from current media
+Human confirmation
+structural loads; FRP laminate; hydrostatic pressure; hydraulics; drainage/overflow; access ergonomics; 
+lifting; transport; code compliance
+State and persistence
+•
+React Query key: bio-degas-plenum-layout + systemId + bookId; GET is enabled only with both IDs and a positive crate 
+count.
+•
+Saved layout is merged over a fresh recommendation; missing stacks are regenerated. Recommended resets local layout.
+•
+Save is blocked by assessment errors or stale media. PUT includes design_book_id and source_crate_count, but server 
+recomputes the source.
+•
+Saved layout creates/updates one project equipment item and one generated plenum line plus a separate tray line 
+quantified by tray_count.
+•
+Draft/In Progress reads live data; For Review/Approved/Released reads the corresponding snapshot. Database triggers 
+prevent mutation of frozen design-book states.
+STALE RESULT
+Staleness = preview.is_stale OR saved.source_crate_count ≠ current crateCount. The UI preserves the saved layout but 
+requires Biological Media recalculation before saving.

@@ -1,0 +1,28 @@
+BIO/DEGAS PLENUM  ·  ENGINEERING REFERENCE
+REV 01  ·  PAGE 4 / 12
+03 / CALCULATION
+Crate sizing & recommendation 
+algorithm
+Coordination reference — not a fabrication release. Verify project engineering.
+EDP · Bio/Degas
+CRATE COUNT
+N = ceil(mediaVolumeM3 ÷ 0.238). If the resolved value is non-finite or ≤ 0, no designer is rendered.
+Recommended candidate generation
+• Fix wall = 80 mm and nominal stack = 3.
+• positions = ceil(N ÷ 3). For rows r ∈ {1, 2}, columns = ceil(positions ÷ r).
+• candidateLength = max(3405 + 800 + 2×80, columns×740 + 800 + 2×80).
+• candidateWidth = max(2005 + 2×80, rows×1040 + 2×80).
+• Discard candidates above 9000 × 2250; sort by area, then length, then rows. Select the first.
+• If no candidate fits, fallback is rows=2, length=9000, width=2250.
+Derived recommendation fields
+Field
+Formula / rule
+tray_count
+2 iff internalWidth ≥ 2005 and internalLength − 800 ≥ 2×3405 + 100; otherwise 1
+external_height
+min(2500, 80 + 3×530 + 100 + 620) = 2390 mm
+water_level
+3×530 = 1590 mm for recommended layout
+stack positions
+row = index mod rows; column = floor(index ÷ rows); quantity=min(3,N−index×3)
+Source: createRecommendedPlenumLayout and createStackPositions

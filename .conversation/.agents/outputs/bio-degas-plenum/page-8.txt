@@ -1,0 +1,45 @@
+BIO/DEGAS PLENUM  ·  ENGINEERING REFERENCE
+REV 01  ·  PAGE 8 / 12
+07 / SECTION
+Longitudinal section & vertical stack
+Coordination reference — not a fabrication release. Verify project engineering.
+EDP · Bio/Degas
+IMPLEMENTED
+Section view filters to one selected row and sorts stacks by column. It exposes tray, gap, 
+water and crate-layer relationships.
+S01
+S01
+S01
+S02
+S02
+S02
+1590 water
+2390 external H
+100 gap
+Tray 620
+3 × 530 crate layers
+Implemented convention: internalHeight = externalHeight − wall = 2310 mm
+Vertical relation
+Reference value
+Interpretation
+External height
+2390 mm
+recommended case
+Implemented internalHeight
+2390 − 80 = 2310 mm
+one-wall subtraction
+Tray height
+620 mm
+tray bottom z=1690; top z=2310
+Crate levels
+z=0, 530, 1060 mm
+bottom-anchored from internal z=0
+Crate top
+3×530 = 1590 mm
+top of level 2
+Tray-to-crate gap
+1690−1590 = 100 mm
+clearance below tray
+Water level
+1590 mm
+bounded 0…internalHeight; visual fill only
