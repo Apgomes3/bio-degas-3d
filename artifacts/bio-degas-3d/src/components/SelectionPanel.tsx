@@ -67,7 +67,7 @@ export function SelectionPanel() {
               {store.stackFillDirection === 'top' && (
                 <>
                   <br/>
-                  Braced clearance below: {Math.max(0, store.waterLevel - stack.quantity * store.crate.height)} mm
+                  Clear water space below FRP angle support: {Math.max(0, store.waterLevel - stack.quantity * store.crate.height)} mm
                 </>
               )}
             </div>

@@ -68,7 +68,7 @@ export function Sidebar() {
                 </select>
               </label>
               <p className="text-[10px] leading-relaxed text-muted-foreground">
-                Top-down stacks use support bracing below the lowest crate where clear water space remains.
+                Top-down stacks use paired 70 × 70 mm FRP angles spanning between longitudinal side beams.
               </p>
             </Section>
 

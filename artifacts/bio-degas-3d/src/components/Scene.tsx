@@ -105,6 +105,43 @@ function WaterVolume() {
   );
 }
 
+function FrpAnglePair({
+  x,
+  elevation,
+  z,
+  span,
+}: {
+  x: number;
+  elevation: number;
+  z: number;
+  span: number;
+}) {
+  const leg = 0.07;
+  const thickness = 0.008;
+  const color = '#475569';
+
+  return (
+    <group position={[x, elevation, z]}>
+      <mesh position={[-leg / 2, -thickness / 2, 0]}>
+        <boxGeometry args={[leg, thickness, span]} />
+        <meshStandardMaterial color={color} roughness={0.42} metalness={0.08} />
+      </mesh>
+      <mesh position={[-thickness / 2, -leg / 2, 0]}>
+        <boxGeometry args={[thickness, leg, span]} />
+        <meshStandardMaterial color={color} roughness={0.42} metalness={0.08} />
+      </mesh>
+      <mesh position={[leg / 2, -thickness / 2, 0]}>
+        <boxGeometry args={[leg, thickness, span]} />
+        <meshStandardMaterial color={color} roughness={0.42} metalness={0.08} />
+      </mesh>
+      <mesh position={[thickness / 2, -leg / 2, 0]}>
+        <boxGeometry args={[thickness, leg, span]} />
+        <meshStandardMaterial color={color} roughness={0.42} metalness={0.08} />
+      </mesh>
+    </group>
+  );
+}
+
 function Stacks() {
   const mode = useContext(VisualModeContext);
   const isFinished = mode === 'finished';
@@ -120,10 +157,61 @@ function Stacks() {
   const l = crate.width / 1000;
   const w = crate.length / 1000;
   const h = crate.height / 1000;
+  const internalL = (envelope.length - 2 * wallThickness) / 1000;
   const internalW = (envelope.width - 2 * wallThickness) / 1000;
+  const sideBeamInset = 0.08;
+  const supportFrames = Array.from(
+    new Map(
+      stacks
+        .map(stack => ({
+          stack,
+          elevation: stackFillDirection === 'top'
+            ? Math.max(0, waterLevel / 1000 - stack.quantity * h)
+            : 0,
+        }))
+        .filter(({ stack, elevation }) => stack.quantity > 0 && elevation > 0.01)
+        .map(({ stack, elevation }) => [
+          `${stack.col}-${Math.round(elevation * 1000)}`,
+          {
+            elevation,
+            leftX: stack.x / 1000,
+            rightX: stack.x / 1000 + l,
+          },
+        ]),
+    ).values(),
+  );
+  const supportLevels = Array.from(new Set(supportFrames.map(frame => frame.elevation)));
   
   return (
     <group>
+      {supportLevels.map(elevation => (
+        <group key={`side-beams-${elevation}`}>
+          <mesh position={[internalL / 2, elevation - 0.11, sideBeamInset]}>
+            <boxGeometry args={[internalL, 0.14, 0.10]} />
+            <meshStandardMaterial color="#334155" roughness={0.5} metalness={0.08} />
+          </mesh>
+          <mesh position={[internalL / 2, elevation - 0.11, internalW - sideBeamInset]}>
+            <boxGeometry args={[internalL, 0.14, 0.10]} />
+            <meshStandardMaterial color="#334155" roughness={0.5} metalness={0.08} />
+          </mesh>
+        </group>
+      ))}
+      {supportFrames.flatMap((frame, frameIndex) => [
+        <FrpAnglePair
+          key={`angle-left-${frameIndex}`}
+          x={frame.leftX}
+          elevation={frame.elevation}
+          z={internalW / 2}
+          span={internalW - sideBeamInset * 2}
+        />,
+        <FrpAnglePair
+          key={`angle-right-${frameIndex}`}
+          x={frame.rightX}
+          elevation={frame.elevation}
+          z={internalW / 2}
+          span={internalW - sideBeamInset * 2}
+        />,
+      ])}
       {stacks.map(stack => {
         const isSelected = selectedId === stack.id;
         const color = isSelected ? "#3b82f6" : "#0284c7";
@@ -131,11 +219,6 @@ function Stacks() {
         const supportHeight = stackFillDirection === 'top'
           ? Math.max(0, waterLevel / 1000 - stack.quantity * h)
           : 0;
-        const beamSize = Math.min(0.08, l * 0.1, w * 0.07);
-        const beamX = l * 0.42;
-        const railZ = w * 0.4;
-        const stackCenterZ = stack.y / 1000 + w / 2;
-        const wallSpanOffset = internalW / 2 - stackCenterZ;
         
         return (
           <group 
@@ -154,27 +237,6 @@ function Stacks() {
               )}
             </mesh>
 
-            {supportHeight > 0.01 && (
-              <group>
-                <mesh position={[-beamX, supportHeight - beamSize / 2, wallSpanOffset]}>
-                  <boxGeometry args={[beamSize, beamSize, internalW]} />
-                  <meshStandardMaterial color={isSelected ? '#f59e0b' : '#64748b'} roughness={0.45} metalness={0.7} />
-                </mesh>
-                <mesh position={[beamX, supportHeight - beamSize / 2, wallSpanOffset]}>
-                  <boxGeometry args={[beamSize, beamSize, internalW]} />
-                  <meshStandardMaterial color={isSelected ? '#f59e0b' : '#64748b'} roughness={0.45} metalness={0.7} />
-                </mesh>
-                <mesh position={[0, supportHeight - beamSize * 1.5, -railZ]}>
-                  <boxGeometry args={[l * 0.92, beamSize, beamSize]} />
-                  <meshStandardMaterial color={isSelected ? '#f59e0b' : '#64748b'} roughness={0.45} metalness={0.7} />
-                </mesh>
-                <mesh position={[0, supportHeight - beamSize * 1.5, railZ]}>
-                  <boxGeometry args={[l * 0.92, beamSize, beamSize]} />
-                  <meshStandardMaterial color={isSelected ? '#f59e0b' : '#64748b'} roughness={0.45} metalness={0.7} />
-                </mesh>
-              </group>
-            )}
-            
             {Array.from({ length: stack.quantity }).map((_, i) => (
               <mesh key={i} position={[0, supportHeight + i * h + h / 2, 0]}>
                 <boxGeometry args={[l * 0.95, h * 0.95, w * 0.95]} />
