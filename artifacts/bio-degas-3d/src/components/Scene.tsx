@@ -52,29 +52,53 @@ function ScaleFigure() {
 
   return (
     <group position={[internalL * 0.14, 0, internalW + 0.72]} rotation={[0, 0.18, 0]}>
-      <mesh position={[0, 1.62, 0]} castShadow>
-        <sphereGeometry args={[0.13, 20, 14]} />
+      <mesh position={[0, 1.6, 0]} scale={[0.92, 1.08, 0.9]} castShadow>
+        <sphereGeometry args={[0.125, 24, 18]} />
         <meshStandardMaterial color={skinColor} roughness={0.8} />
       </mesh>
-      <mesh position={[0, 1.25, 0]} castShadow>
-        <capsuleGeometry args={[0.19, 0.48, 8, 16]} />
+      <mesh position={[0, 1.72, 0]} scale={[1.08, 0.46, 1]} castShadow>
+        <sphereGeometry args={[0.145, 24, 12]} />
+        <meshStandardMaterial color="#facc15" roughness={0.58} />
+      </mesh>
+      <mesh position={[0, 1.695, 0.09]} castShadow>
+        <boxGeometry args={[0.32, 0.025, 0.075]} />
+        <meshStandardMaterial color="#eab308" roughness={0.58} />
+      </mesh>
+      <mesh position={[0, 1.43, 0]} castShadow>
+        <cylinderGeometry args={[0.07, 0.075, 0.12, 16]} />
+        <meshStandardMaterial color={skinColor} roughness={0.8} />
+      </mesh>
+      <mesh position={[0, 1.18, 0]} scale={[1.08, 1, 0.72]} castShadow>
+        <capsuleGeometry args={[0.19, 0.38, 10, 18]} />
         <meshStandardMaterial color={clothingColor} roughness={0.72} />
       </mesh>
-      <mesh position={[-0.13, 0.55, 0]} rotation={[0, 0, -0.035]} castShadow>
-        <capsuleGeometry args={[0.075, 0.72, 8, 12]} />
+      <mesh position={[0, 1.19, 0.145]} castShadow>
+        <boxGeometry args={[0.34, 0.045, 0.025]} />
+        <meshStandardMaterial color="#fef08a" roughness={0.65} />
+      </mesh>
+      <mesh position={[-0.11, 0.53, 0]} rotation={[0, 0, -0.03]} castShadow>
+        <capsuleGeometry args={[0.073, 0.69, 8, 14]} />
         <meshStandardMaterial color={darkColor} roughness={0.82} />
       </mesh>
-      <mesh position={[0.13, 0.55, 0]} rotation={[0, 0, 0.035]} castShadow>
-        <capsuleGeometry args={[0.075, 0.72, 8, 12]} />
+      <mesh position={[0.11, 0.53, 0]} rotation={[0, 0, 0.03]} castShadow>
+        <capsuleGeometry args={[0.073, 0.69, 8, 14]} />
         <meshStandardMaterial color={darkColor} roughness={0.82} />
       </mesh>
-      <mesh position={[-0.25, 1.23, 0]} rotation={[0, 0, -0.2]} castShadow>
-        <capsuleGeometry args={[0.055, 0.55, 8, 12]} />
+      <mesh position={[-0.255, 1.17, 0]} rotation={[0, 0, -0.16]} castShadow>
+        <capsuleGeometry args={[0.055, 0.48, 8, 14]} />
         <meshStandardMaterial color={clothingColor} roughness={0.72} />
       </mesh>
-      <mesh position={[0.25, 1.23, 0]} rotation={[0, 0, 0.2]} castShadow>
-        <capsuleGeometry args={[0.055, 0.55, 8, 12]} />
+      <mesh position={[0.255, 1.17, 0]} rotation={[0, 0, 0.16]} castShadow>
+        <capsuleGeometry args={[0.055, 0.48, 8, 14]} />
         <meshStandardMaterial color={clothingColor} roughness={0.72} />
+      </mesh>
+      <mesh position={[-0.31, 0.88, 0]} castShadow>
+        <sphereGeometry args={[0.062, 14, 10]} />
+        <meshStandardMaterial color={skinColor} roughness={0.8} />
+      </mesh>
+      <mesh position={[0.31, 0.88, 0]} castShadow>
+        <sphereGeometry args={[0.062, 14, 10]} />
+        <meshStandardMaterial color={skinColor} roughness={0.8} />
       </mesh>
       <mesh position={[-0.13, 0.12, 0.06]} castShadow>
         <boxGeometry args={[0.18, 0.1, 0.34]} />
@@ -864,12 +888,19 @@ function TechnicalPlanFallback({ visualMode }: { visualMode: 'finished' | 'techn
           <rect x="56" y="91" width="848" height="408" rx={isFinished ? 10 : 3} fill={isFinished ? '#334155' : '#dbeafe'} fillOpacity={isFinished ? 1 : .24} stroke={isFinished ? '#0f172a' : '#16395f'} strokeWidth={isFinished ? 8 : 4} />
           <rect x="70" y="105" width="820" height="380" rx={isFinished ? 5 : 0} fill={isFinished ? '#64748b' : '#e0f2fe'} fillOpacity={isFinished ? 1 : .35} stroke={isFinished ? '#94a3b8' : '#5c7790'} strokeWidth="1.5" />
           <g transform="translate(923 370)" aria-label="1.75 metre human scale figure">
-            <circle cx="0" cy="-48" r="10" fill="#d6a477" stroke="#0f172a" strokeWidth="2" />
-            <rect x="-11" y="-36" width="22" height="39" rx="9" fill="#f97316" stroke="#0f172a" strokeWidth="2" />
-            <line x1="-8" y1="-27" x2="-18" y2="-2" stroke="#0f172a" strokeWidth="7" strokeLinecap="round" />
-            <line x1="8" y1="-27" x2="18" y2="-2" stroke="#0f172a" strokeWidth="7" strokeLinecap="round" />
-            <line x1="-6" y1="0" x2="-9" y2="35" stroke="#334155" strokeWidth="8" strokeLinecap="round" />
-            <line x1="6" y1="0" x2="9" y2="35" stroke="#334155" strokeWidth="8" strokeLinecap="round" />
+            <ellipse cx="0" cy="39" rx="19" ry="4" fill="#0f172a" opacity=".18" />
+            <path d="M-8-51 C-8-59 8-59 8-51 L10-48 L-10-48 Z" fill="#facc15" stroke="#713f12" strokeWidth="1.5" />
+            <path d="M-12-49 Q0-53 12-49" fill="none" stroke="#713f12" strokeWidth="2.5" strokeLinecap="round" />
+            <ellipse cx="0" cy="-41" rx="8.5" ry="10.5" fill="#d6a477" stroke="#0f172a" strokeWidth="1.5" />
+            <path d="M-6-43 Q0-39 6-43" fill="none" stroke="#8b5e3c" strokeWidth="1" opacity=".7" />
+            <path d="M-13-29 Q0-35 13-29 L11 1 Q0 7-11 1 Z" fill="#f97316" stroke="#0f172a" strokeWidth="2" />
+            <path d="M-8-27 L-2 1 M8-27 L2 1" stroke="#fef08a" strokeWidth="2.5" />
+            <path d="M-9-24 Q-16-17-17-5 Q-18 2-14 9" fill="none" stroke="#f97316" strokeWidth="7" strokeLinecap="round" />
+            <path d="M9-24 Q16-17 17-5 Q18 2 14 9" fill="none" stroke="#f97316" strokeWidth="7" strokeLinecap="round" />
+            <circle cx="-14" cy="10" r="3.5" fill="#d6a477" stroke="#0f172a" strokeWidth="1" />
+            <circle cx="14" cy="10" r="3.5" fill="#d6a477" stroke="#0f172a" strokeWidth="1" />
+            <path d="M-9 1 L-10 31 L-3 35 L0 8 L3 35 L10 31 L9 1 Z" fill="#334155" stroke="#0f172a" strokeWidth="2" />
+            <path d="M-10 30 L-14 36 L-3 36 L-3 33 M10 30 L14 36 L3 36 L3 33" fill="#111827" stroke="#0f172a" strokeWidth="1.5" strokeLinejoin="round" />
             <text
               x="0"
               y="58"
