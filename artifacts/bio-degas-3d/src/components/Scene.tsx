@@ -284,7 +284,6 @@ function Stacks() {
   const l = crate.width / 1000;
   const w = crate.length / 1000;
   const h = crate.height / 1000;
-  const internalL = (envelope.length - 2 * wallThickness) / 1000;
   const internalW = (envelope.width - 2 * wallThickness) / 1000;
   const sideBeamInset = 0.08;
   const topDownCrateDatum = calculateTopDownCrateDatum(
@@ -320,38 +319,37 @@ function Stacks() {
         ]),
     ).values(),
   );
-  const supportLevels = Array.from(new Set(supportFrames.map(frame => frame.elevation)));
   
   return (
     <group>
-      {supportLevels.map(elevation => (
-        <group key={`side-beams-${elevation}`}>
-          <mesh position={[internalL / 2, elevation - 0.11, sideBeamInset]}>
-            <boxGeometry args={[internalL, 0.14, 0.10]} />
-            <meshStandardMaterial color="#334155" roughness={0.5} metalness={0.08} />
-          </mesh>
-          <mesh position={[internalL / 2, elevation - 0.11, internalW - sideBeamInset]}>
-            <boxGeometry args={[internalL, 0.14, 0.10]} />
-            <meshStandardMaterial color="#334155" roughness={0.5} metalness={0.08} />
-          </mesh>
-        </group>
-      ))}
-      {supportFrames.flatMap((frame, frameIndex) => [
-        <FrpAnglePair
-          key={`angle-left-${frameIndex}`}
-          x={frame.leftX}
-          elevation={frame.elevation}
-          z={internalW / 2}
-          span={internalW - sideBeamInset * 2}
-        />,
-        <FrpAnglePair
-          key={`angle-right-${frameIndex}`}
-          x={frame.rightX}
-          elevation={frame.elevation}
-          z={internalW / 2}
-          span={internalW - sideBeamInset * 2}
-        />,
-      ])}
+      {supportFrames.map((frame, frameIndex) => {
+        const frameLength = frame.rightX - frame.leftX;
+        const frameCenterX = frame.leftX + frameLength / 2;
+        return (
+          <group key={`crate-support-${frameIndex}`}>
+            <mesh position={[frameCenterX, frame.elevation - 0.11, sideBeamInset]}>
+              <boxGeometry args={[frameLength, 0.14, 0.10]} />
+              <meshStandardMaterial color="#334155" roughness={0.5} metalness={0.08} />
+            </mesh>
+            <mesh position={[frameCenterX, frame.elevation - 0.11, internalW - sideBeamInset]}>
+              <boxGeometry args={[frameLength, 0.14, 0.10]} />
+              <meshStandardMaterial color="#334155" roughness={0.5} metalness={0.08} />
+            </mesh>
+            <FrpAnglePair
+              x={frame.leftX}
+              elevation={frame.elevation}
+              z={internalW / 2}
+              span={internalW - sideBeamInset * 2}
+            />
+            <FrpAnglePair
+              x={frame.rightX}
+              elevation={frame.elevation}
+              z={internalW / 2}
+              span={internalW - sideBeamInset * 2}
+            />
+          </group>
+        );
+      })}
       {stacks.map(stack => {
         const isSelected = selectedId === stack.id;
         const color = isSelected ? "#3b82f6" : "#0284c7";
@@ -401,11 +399,29 @@ function Trays() {
   const wallThickness = useStore(s => s.wallThickness);
   const selectedId = useStore(s => s.selectedId);
   const setSelectedId = useStore(s => s.setSelectedId);
+  const internalL = (envelope.length - 2 * wallThickness) / 1000;
   const internalW = (envelope.width - 2 * wallThickness) / 1000;
   const internalH = (envelope.height - wallThickness) / 1000;
+  const supportBeamHeight = 0.05;
+  const supportBeamProjection = 0.10;
+  const supportLevels = Array.from(new Set(
+    trays.map(tray => Math.round((internalH - tray.height / 1000) * 1000) / 1000),
+  ));
   
   return (
     <group>
+      {supportLevels.map(elevation => (
+        <group key={`tray-wall-support-${elevation}`}>
+          <mesh position={[internalL / 2, elevation - supportBeamHeight / 2, supportBeamProjection / 2]}>
+            <boxGeometry args={[internalL, supportBeamHeight, supportBeamProjection]} />
+            <meshStandardMaterial color="#475569" roughness={0.48} metalness={0.1} />
+          </mesh>
+          <mesh position={[internalL / 2, elevation - supportBeamHeight / 2, internalW - supportBeamProjection / 2]}>
+            <boxGeometry args={[internalL, supportBeamHeight, supportBeamProjection]} />
+            <meshStandardMaterial color="#475569" roughness={0.48} metalness={0.1} />
+          </mesh>
+        </group>
+      ))}
       {trays.map((tray, i) => {
         const isSelected = selectedId === tray.id;
         const l = tray.length / 1000;
