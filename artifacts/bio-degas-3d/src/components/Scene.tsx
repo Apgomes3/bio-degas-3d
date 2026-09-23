@@ -40,6 +40,54 @@ function TankShell() {
   );
 }
 
+function ScaleFigure() {
+  const mode = useContext(VisualModeContext);
+  const envelope = useStore(s => s.envelope);
+  const wallThickness = useStore(s => s.wallThickness);
+  const internalL = (envelope.length - 2 * wallThickness) / 1000;
+  const internalW = (envelope.width - 2 * wallThickness) / 1000;
+  const clothingColor = mode === 'finished' ? '#f97316' : '#2563eb';
+  const darkColor = mode === 'finished' ? '#1e293b' : '#334155';
+  const skinColor = '#d6a477';
+
+  return (
+    <group position={[internalL * 0.14, 0, internalW + 0.72]} rotation={[0, 0.18, 0]}>
+      <mesh position={[0, 1.62, 0]} castShadow>
+        <sphereGeometry args={[0.13, 20, 14]} />
+        <meshStandardMaterial color={skinColor} roughness={0.8} />
+      </mesh>
+      <mesh position={[0, 1.25, 0]} castShadow>
+        <capsuleGeometry args={[0.19, 0.48, 8, 16]} />
+        <meshStandardMaterial color={clothingColor} roughness={0.72} />
+      </mesh>
+      <mesh position={[-0.13, 0.55, 0]} rotation={[0, 0, -0.035]} castShadow>
+        <capsuleGeometry args={[0.075, 0.72, 8, 12]} />
+        <meshStandardMaterial color={darkColor} roughness={0.82} />
+      </mesh>
+      <mesh position={[0.13, 0.55, 0]} rotation={[0, 0, 0.035]} castShadow>
+        <capsuleGeometry args={[0.075, 0.72, 8, 12]} />
+        <meshStandardMaterial color={darkColor} roughness={0.82} />
+      </mesh>
+      <mesh position={[-0.25, 1.23, 0]} rotation={[0, 0, -0.2]} castShadow>
+        <capsuleGeometry args={[0.055, 0.55, 8, 12]} />
+        <meshStandardMaterial color={clothingColor} roughness={0.72} />
+      </mesh>
+      <mesh position={[0.25, 1.23, 0]} rotation={[0, 0, 0.2]} castShadow>
+        <capsuleGeometry args={[0.055, 0.55, 8, 12]} />
+        <meshStandardMaterial color={clothingColor} roughness={0.72} />
+      </mesh>
+      <mesh position={[-0.13, 0.12, 0.06]} castShadow>
+        <boxGeometry args={[0.18, 0.1, 0.34]} />
+        <meshStandardMaterial color="#111827" roughness={0.9} />
+      </mesh>
+      <mesh position={[0.13, 0.12, 0.06]} castShadow>
+        <boxGeometry args={[0.18, 0.1, 0.34]} />
+        <meshStandardMaterial color="#111827" roughness={0.9} />
+      </mesh>
+    </group>
+  );
+}
+
 function AccessZone() {
   const mode = useContext(VisualModeContext);
   const isFinished = mode === 'finished';
@@ -965,6 +1013,7 @@ export function Scene({ viewMode = 'iso', visualMode = 'finished' }: { viewMode?
         
         <group position={[0, -1, -1]}>
           <TankShell />
+          <ScaleFigure />
           <AccessZone />
           <WaterVolume />
           <Stacks />
