@@ -72,6 +72,7 @@ export interface ProjectState {
   nominalStackHeight: number;
   maxStackHeight: number;
   stackFillDirection: 'bottom' | 'top';
+  topDownTrayClearance: number;
   rows: number;
   trayCount: number;
   trayCountAuto: boolean;
@@ -113,6 +114,7 @@ const DEFAULT_REFERENCE = {
   nominalStackHeight: 3,
   maxStackHeight: 4,
   stackFillDirection: 'bottom' as const,
+  topDownTrayClearance: 100,
   rows: 2,
   trayCount: 2,
   trayCountAuto: true,
@@ -180,6 +182,18 @@ export function calculateWaterMatchedOutletLength(
   if (Math.abs(branchY) < 0.001) return null;
   const outletLength = (waterY - elbowEndY) / branchY;
   return outletLength > 0 ? outletLength * 1000 : null;
+}
+
+export function calculateTopDownCrateDatum(
+  envelope: Envelope,
+  wallThickness: number,
+  trays: Tray[],
+  clearance: number,
+) {
+  if (trays.length === 0) return null;
+  const internalHeight = envelope.height - wallThickness;
+  const lowestTrayUnderside = Math.min(...trays.map(tray => internalHeight - tray.height));
+  return lowestTrayUnderside - Math.max(0, clearance);
 }
 
 function generateStacks(state: Partial<ProjectState>) {
@@ -620,15 +634,26 @@ export function useValidation(): ValidationState {
   // 6. Stack Validation
   const cols = Math.floor((internalL - state.accessMin) / state.crate.width);
   const rows = Math.floor(internalW / state.crate.length);
+  const topDownCrateDatum = calculateTopDownCrateDatum(
+    state.envelope,
+    state.wallThickness,
+    state.trays,
+    state.topDownTrayClearance,
+  );
   const unsupportedTopDownStacks = state.stackFillDirection === 'top'
     ? state.stacks.filter(stack =>
       stack.quantity > 0
-      && state.waterLevel - stack.quantity * state.crate.height < TOP_DOWN_SUPPORT_CLEARANCE)
+      && (
+        topDownCrateDatum === null
+        || topDownCrateDatum - stack.quantity * state.crate.height < TOP_DOWN_SUPPORT_CLEARANCE
+      ))
     : [];
 
-  if (unsupportedTopDownStacks.length > 0) {
+  if (state.stackFillDirection === 'top' && topDownCrateDatum === null) {
+    errors.push('Top-down support configuration cannot be applied because no dispersion tray is available as the crate datum.');
+  } else if (unsupportedTopDownStacks.length > 0) {
     errors.push(
-      `Top-down support configuration cannot be applied: ${unsupportedTopDownStacks.length} active stack${unsupportedTopDownStacks.length === 1 ? '' : 's'} cannot leave the required ${TOP_DOWN_SUPPORT_CLEARANCE}mm clearance for the FRP angles and side beams. Crates remain visible for reference, but supports are hidden.`,
+      `Top-down support configuration cannot be applied: ${unsupportedTopDownStacks.length} active stack${unsupportedTopDownStacks.length === 1 ? '' : 's'} cannot fit ${state.topDownTrayClearance}mm below the dispersion tray while leaving the required ${TOP_DOWN_SUPPORT_CLEARANCE}mm clearance for the FRP angles and side beams. Crates remain visible for reference, but supports are hidden.`,
     );
   }
   

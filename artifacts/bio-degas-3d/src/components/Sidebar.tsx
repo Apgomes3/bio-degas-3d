@@ -64,11 +64,19 @@ export function Sidebar() {
                   className="mt-1 w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                   <option value="bottom">Bottom-up · floor supported</option>
-                  <option value="top">Top-down · align to water level</option>
+                  <option value="top">Top-down · below dispersion tray</option>
                 </select>
               </label>
+              {store.stackFillDirection === 'top' && (
+                <NumberInput
+                  label="Clearance Below Tray"
+                  value={store.topDownTrayClearance}
+                  min={0}
+                  onChange={(value) => handleParamChange('topDownTrayClearance', Math.max(0, value))}
+                />
+              )}
               <p className="text-[10px] leading-relaxed text-muted-foreground">
-                Top-down stacks use paired 70 × 70 mm FRP angles spanning between longitudinal side beams.
+                Top-down stacks align below the lowest dispersion tray underside, with 100 mm clearance by default.
               </p>
             </Section>
 
@@ -601,8 +609,8 @@ function SaveManager() {
     const newSave = { id, name: saveName, date: new Date().toISOString() };
     
     // Extract store data to save
-    const { envelope, wallThickness, accessMin, crate, nominalStackHeight, maxStackHeight, stackFillDirection, rows, trayCount, trayCountAuto, trayGap, waterLevel, requiredCrates, stacks, trays, pipeConnections } = store;
-    const data = { envelope, wallThickness, accessMin, crate, nominalStackHeight, maxStackHeight, stackFillDirection, rows, trayCount, trayCountAuto, trayGap, waterLevel, requiredCrates, stacks, trays, pipeConnections };
+    const { envelope, wallThickness, accessMin, crate, nominalStackHeight, maxStackHeight, stackFillDirection, topDownTrayClearance, rows, trayCount, trayCountAuto, trayGap, waterLevel, requiredCrates, stacks, trays, pipeConnections } = store;
+    const data = { envelope, wallThickness, accessMin, crate, nominalStackHeight, maxStackHeight, stackFillDirection, topDownTrayClearance, rows, trayCount, trayCountAuto, trayGap, waterLevel, requiredCrates, stacks, trays, pipeConnections };
     
     localStorage.setItem(`biodegas_save_${id}`, JSON.stringify(data));
     localStorage.setItem('biodegas_saves', JSON.stringify([...list, newSave]));
@@ -626,8 +634,8 @@ function SaveManager() {
   };
 
   const exportJSON = () => {
-    const { envelope, wallThickness, accessMin, crate, nominalStackHeight, maxStackHeight, stackFillDirection, rows, trayCount, trayCountAuto, trayGap, waterLevel, requiredCrates, stacks, trays, pipeConnections } = store;
-    const data = { envelope, wallThickness, accessMin, crate, nominalStackHeight, maxStackHeight, stackFillDirection, rows, trayCount, trayCountAuto, trayGap, waterLevel, requiredCrates, stacks, trays, pipeConnections };
+    const { envelope, wallThickness, accessMin, crate, nominalStackHeight, maxStackHeight, stackFillDirection, topDownTrayClearance, rows, trayCount, trayCountAuto, trayGap, waterLevel, requiredCrates, stacks, trays, pipeConnections } = store;
+    const data = { envelope, wallThickness, accessMin, crate, nominalStackHeight, maxStackHeight, stackFillDirection, topDownTrayClearance, rows, trayCount, trayCountAuto, trayGap, waterLevel, requiredCrates, stacks, trays, pipeConnections };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");

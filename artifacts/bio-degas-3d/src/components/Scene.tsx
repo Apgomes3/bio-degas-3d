@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, Grid, GizmoHelper, GizmoViewport } from '@react-three/drei';
 import * as THREE from 'three';
-import { calculateWaterMatchedOutletLength, TOP_DOWN_SUPPORT_CLEARANCE, type PipeConnection, useStore, useValidation } from '@/store/useStore';
+import { calculateTopDownCrateDatum, calculateWaterMatchedOutletLength, TOP_DOWN_SUPPORT_CLEARANCE, type PipeConnection, useStore, useValidation } from '@/store/useStore';
 
 const VisualModeContext = createContext<'finished' | 'technical'>('finished');
 
@@ -275,8 +275,9 @@ function Stacks() {
   const crate = useStore(s => s.crate);
   const envelope = useStore(s => s.envelope);
   const wallThickness = useStore(s => s.wallThickness);
-  const waterLevel = useStore(s => s.waterLevel);
   const stackFillDirection = useStore(s => s.stackFillDirection);
+  const topDownTrayClearance = useStore(s => s.topDownTrayClearance);
+  const trays = useStore(s => s.trays);
   const selectedId = useStore(s => s.selectedId);
   const setSelectedId = useStore(s => s.setSelectedId);
   
@@ -286,17 +287,26 @@ function Stacks() {
   const internalL = (envelope.length - 2 * wallThickness) / 1000;
   const internalW = (envelope.width - 2 * wallThickness) / 1000;
   const sideBeamInset = 0.08;
+  const topDownCrateDatum = calculateTopDownCrateDatum(
+    envelope,
+    wallThickness,
+    trays,
+    topDownTrayClearance,
+  );
   const topDownConfigurationUsable = stackFillDirection !== 'top'
-    || stacks.every(stack =>
-      stack.quantity <= 0
-      || waterLevel - stack.quantity * crate.height >= TOP_DOWN_SUPPORT_CLEARANCE);
+    || (
+      topDownCrateDatum !== null
+      && stacks.every(stack =>
+        stack.quantity <= 0
+        || topDownCrateDatum - stack.quantity * crate.height >= TOP_DOWN_SUPPORT_CLEARANCE)
+    );
   const supportFrames = Array.from(
     new Map(
       (topDownConfigurationUsable ? stacks : [])
         .map(stack => ({
           stack,
           elevation: stackFillDirection === 'top'
-            ? Math.max(0, waterLevel / 1000 - stack.quantity * h)
+            ? Math.max(0, (topDownCrateDatum ?? 0) / 1000 - stack.quantity * h)
             : 0,
         }))
         .filter(({ stack, elevation }) => stack.quantity > 0 && elevation > 0.01)
@@ -346,7 +356,7 @@ function Stacks() {
         const isSelected = selectedId === stack.id;
         const color = isSelected ? "#3b82f6" : "#0284c7";
         const supportHeight = stackFillDirection === 'top'
-          ? Math.max(0, waterLevel / 1000 - stack.quantity * h)
+          ? Math.max(0, (topDownCrateDatum ?? 0) / 1000 - stack.quantity * h)
           : 0;
         
         return (
@@ -727,8 +737,8 @@ function TechnicalPlanFallback({ visualMode }: { visualMode: 'finished' | 'techn
   const trays = useStore(s => s.trays);
   const pipeConnections = useStore(s => s.pipeConnections);
   const crate = useStore(s => s.crate);
-  const waterLevel = useStore(s => s.waterLevel);
   const stackFillDirection = useStore(s => s.stackFillDirection);
+  const topDownTrayClearance = useStore(s => s.topDownTrayClearance);
   const selectedId = useStore(s => s.selectedId);
   const setSelectedId = useStore(s => s.setSelectedId);
   const validation = useValidation();
@@ -739,10 +749,19 @@ function TechnicalPlanFallback({ visualMode }: { visualMode: 'finished' | 'techn
   const sx = (value: number) => (value / internalL) * 820;
   const sy = (value: number) => (value / internalW) * 380;
   const isFinished = visualMode === 'finished';
+  const topDownCrateDatum = calculateTopDownCrateDatum(
+    envelope,
+    wallThickness,
+    trays,
+    topDownTrayClearance,
+  );
   const topDownConfigurationUsable = stackFillDirection !== 'top'
-    || stacks.every(stack =>
-      stack.quantity <= 0
-      || waterLevel - stack.quantity * crate.height >= TOP_DOWN_SUPPORT_CLEARANCE);
+    || (
+      topDownCrateDatum !== null
+      && stacks.every(stack =>
+        stack.quantity <= 0
+        || topDownCrateDatum - stack.quantity * crate.height >= TOP_DOWN_SUPPORT_CLEARANCE)
+    );
 
   return (
     <div id="coordination-canvas" className={`flex h-full min-h-[480px] w-full flex-col ${isFinished ? 'bg-slate-300' : 'bg-[#f3f6f8]'}`}>
@@ -875,7 +894,7 @@ function TechnicalPlanFallback({ visualMode }: { visualMode: 'finished' | 'techn
                 TOP-DOWN SUPPORT CANNOT BE APPLIED
               </text>
               <text x="480" y="314" textAnchor="middle" fill="#b91c1c" fontSize="11">
-                Crates shown for reference; support beams are hidden.
+                Crates shown for reference; tray-clearance supports are hidden.
               </text>
             </g>
           )}
