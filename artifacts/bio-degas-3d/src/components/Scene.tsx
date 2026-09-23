@@ -863,6 +863,25 @@ function TechnicalPlanFallback({ visualMode }: { visualMode: 'finished' | 'techn
           </text>
           <rect x="56" y="91" width="848" height="408" rx={isFinished ? 10 : 3} fill={isFinished ? '#334155' : '#dbeafe'} fillOpacity={isFinished ? 1 : .24} stroke={isFinished ? '#0f172a' : '#16395f'} strokeWidth={isFinished ? 8 : 4} />
           <rect x="70" y="105" width="820" height="380" rx={isFinished ? 5 : 0} fill={isFinished ? '#64748b' : '#e0f2fe'} fillOpacity={isFinished ? 1 : .35} stroke={isFinished ? '#94a3b8' : '#5c7790'} strokeWidth="1.5" />
+          <g transform="translate(923 370)" aria-label="1.75 metre human scale figure">
+            <circle cx="0" cy="-48" r="10" fill="#d6a477" stroke="#0f172a" strokeWidth="2" />
+            <rect x="-11" y="-36" width="22" height="39" rx="9" fill="#f97316" stroke="#0f172a" strokeWidth="2" />
+            <line x1="-8" y1="-27" x2="-18" y2="-2" stroke="#0f172a" strokeWidth="7" strokeLinecap="round" />
+            <line x1="8" y1="-27" x2="18" y2="-2" stroke="#0f172a" strokeWidth="7" strokeLinecap="round" />
+            <line x1="-6" y1="0" x2="-9" y2="35" stroke="#334155" strokeWidth="8" strokeLinecap="round" />
+            <line x1="6" y1="0" x2="9" y2="35" stroke="#334155" strokeWidth="8" strokeLinecap="round" />
+            <text
+              x="0"
+              y="58"
+              textAnchor="middle"
+              fill="#0f172a"
+              fontSize="10"
+              fontWeight="700"
+              transform="rotate(-90 0 58)"
+            >
+              PERSON 1.75 m
+            </text>
+          </g>
           <rect x="70" y="105" width={sx(accessMin)} height="380" fill={isFinished ? '#475569' : '#fbbf24'} fillOpacity={isFinished ? 1 : .25} stroke={isFinished ? '#64748b' : '#d97706'} strokeDasharray={isFinished ? undefined : '8 5'} />
           {!isFinished && (
             <text x={70 + sx(accessMin) / 2} y="306" textAnchor="middle" fill="#92400e" fontSize="12" fontWeight="700" transform={`rotate(-90 ${70 + sx(accessMin) / 2} 306)`}>{accessMin} ACCESS</text>
