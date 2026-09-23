@@ -9,17 +9,21 @@ import { Route, Switch, useLocation, Router as WouterRouter } from 'wouter';
 import { Sidebar } from '@/components/Sidebar';
 import { Scene } from '@/components/Scene';
 import { SelectionPanel } from '@/components/SelectionPanel';
-import { BoxSelect, Maximize, MousePointer2 } from 'lucide-react';
+import { MousePointer2, Ruler } from 'lucide-react';
+
+import { DimensionsOverlay } from '@/components/DimensionsOverlay';
 
 const queryClient = new QueryClient();
 
 function MainWorkspace() {
-  const [viewMode, setViewMode] = useState<'iso' | 'top' | 'front' | 'side'>('iso');
+  const [viewMode, setViewMode] = useState<string>('iso');
+  const [showDimensions, setShowDimensions] = useState(true);
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background">
       <Sidebar />
       <div className="flex-1 relative">
+        {showDimensions && <DimensionsOverlay />}
         <div className="absolute top-4 left-4 z-10 flex gap-2">
           <div className="bg-card/95 backdrop-blur border border-border rounded-lg shadow-sm flex p-1">
             <button 
@@ -50,11 +54,37 @@ function MainWorkspace() {
             >
               SIDE
             </button>
+            <div className="w-px bg-border mx-1 my-1.5" />
+            <button
+              onClick={() => setViewMode('sec-long')}
+              data-testid="button-view-sec-long"
+              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${viewMode === 'sec-long' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
+            >
+              SEC-L
+            </button>
+            <button
+              onClick={() => setViewMode('sec-trans')}
+              data-testid="button-view-sec-trans"
+              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${viewMode === 'sec-trans' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
+            >
+              SEC-T
+            </button>
           </div>
           
           <div className="bg-card/95 backdrop-blur border border-border rounded-lg shadow-sm px-3 py-1.5 flex items-center gap-2 text-xs font-medium text-muted-foreground pointer-events-none">
             <MousePointer2 size={14} /> Orbit / Select
           </div>
+          <button
+            type="button"
+            onClick={() => setShowDimensions(value => !value)}
+            className={`bg-card/95 backdrop-blur border rounded-lg shadow-sm px-3 py-1.5 flex items-center gap-2 text-xs font-semibold transition-colors ${
+              showDimensions
+                ? 'border-primary/40 bg-primary/10 text-primary'
+                : 'border-border text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Ruler size={14} /> DIM
+          </button>
         </div>
 
         <Scene viewMode={viewMode} visualMode="technical" />

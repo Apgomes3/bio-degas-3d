@@ -61,6 +61,7 @@ export interface ValidationState {
   isValid: boolean;
   warnings: string[];
   errors: string[];
+  invalidComponentIds: string[];
 }
 
 export interface ProjectState {
@@ -524,6 +525,11 @@ export function useValidation(): ValidationState {
   const state = useStore();
   const warnings: string[] = [];
   const errors: string[] = [];
+  const invalidComponentIds = new Set<string>();
+  const addClashError = (message: string, componentIds: string[]) => {
+    errors.push(message);
+    componentIds.forEach(id => invalidComponentIds.add(id));
+  };
   
   const internalL = state.envelope.length - 2 * state.wallThickness;
   const internalW = state.envelope.width - 2 * state.wallThickness;
@@ -577,12 +583,18 @@ export function useValidation(): ValidationState {
   });
   
   // 4. Tray Gap
-  if (state.trays.length === 2) {
-    const gap = state.trays[1].x - (state.trays[0].x + state.trays[0].length);
-    if (Math.abs(gap - state.trayGap) > 1 && !state.trayExplorationMode) {
+  const orderedTrays = [...state.trays].sort((a, b) => a.x - b.x);
+  for (let index = 1; index < orderedTrays.length; index++) {
+    const previousTray = orderedTrays[index - 1];
+    const tray = orderedTrays[index];
+    const gap = tray.x - (previousTray.x + previousTray.length);
+    if (gap < 0) {
+      addClashError(
+        `Dispersion trays ${state.trays.indexOf(previousTray) + 1} and ${state.trays.indexOf(tray) + 1} overlap by ${Math.abs(Math.round(gap))}mm.`,
+        [previousTray.id, tray.id],
+      );
+    } else if (Math.abs(gap - state.trayGap) > 1 && !state.trayExplorationMode) {
       warnings.push(`Tray gap is ${Math.round(gap)}mm, expected ${state.trayGap}mm.`);
-    } else if (gap < 0) {
-      errors.push(`Trays are overlapping by ${Math.abs(Math.round(gap))}mm.`);
     }
   }
 
@@ -663,6 +675,99 @@ export function useValidation(): ValidationState {
     state.crate.height,
   );
 
+  const stackBase = state.stackFillDirection === 'top'
+    ? Math.max(0, topDownSupportDatum ?? 0)
+    : 0;
+  const overlaps = (
+    aMin: number,
+    aMax: number,
+    bMin: number,
+    bMax: number,
+  ) => aMin < bMax && aMax > bMin;
+
+  state.stacks.filter(stack => stack.quantity > 0).forEach(stack => {
+    const stackTop = stackBase + stack.quantity * state.crate.height;
+    state.trays.forEach((tray, trayIndex) => {
+      const trayZ = (internalW - tray.width) / 2;
+      const trayBottom = internalH - tray.height;
+      if (
+        overlaps(stack.x, stack.x + state.crate.width, tray.x, tray.x + tray.length)
+        && overlaps(stack.y, stack.y + state.crate.length, trayZ, trayZ + tray.width)
+        && overlaps(stackBase, stackTop, trayBottom, internalH)
+      ) {
+        addClashError(
+          `Stack R${stack.row + 1}C${stack.col + 1} clashes with dispersion tray ${trayIndex + 1}.`,
+          [stack.id, tray.id],
+        );
+      }
+    });
+  });
+
+  state.pipeConnections.forEach(connection => {
+    const radius = connection.diameter / 2;
+    let xMin = connection.x - radius;
+    let xMax = connection.x + radius;
+    let zMin = connection.y - radius;
+    let zMax = connection.y + radius;
+    let yMin = 0;
+    let yMax = internalH;
+
+    if (connection.face === 'access' || connection.face === 'rear') {
+      const start = connection.face === 'access' ? 0 : internalL - connection.pipeLength;
+      xMin = start;
+      xMax = start + connection.pipeLength;
+      zMin = connection.x - radius;
+      zMax = connection.x + radius;
+      yMin = connection.y - radius;
+      yMax = connection.y + radius;
+    } else if (connection.face === 'left' || connection.face === 'right') {
+      xMin = connection.x - radius;
+      xMax = connection.x + radius;
+      const start = connection.face === 'left' ? 0 : internalW - connection.pipeLength;
+      zMin = start;
+      zMax = start + connection.pipeLength;
+      yMin = connection.y - radius;
+      yMax = connection.y + radius;
+    } else {
+      xMin = connection.x - radius;
+      xMax = connection.x + radius;
+      zMin = connection.y - radius;
+      zMax = connection.y + radius;
+      const start = connection.face === 'bottom' ? 0 : internalH - connection.pipeLength;
+      yMin = start;
+      yMax = start + connection.pipeLength;
+    }
+
+    state.stacks.filter(stack => stack.quantity > 0).forEach(stack => {
+      const stackTop = stackBase + stack.quantity * state.crate.height;
+      if (
+        overlaps(xMin, xMax, stack.x, stack.x + state.crate.width)
+        && overlaps(zMin, zMax, stack.y, stack.y + state.crate.length)
+        && overlaps(yMin, yMax, stackBase, stackTop)
+      ) {
+        addClashError(
+          `${connection.name} pipe stub clashes with stack R${stack.row + 1}C${stack.col + 1}.`,
+          [connection.id, stack.id],
+        );
+      }
+    });
+
+    state.trays.forEach((tray, trayIndex) => {
+      const trayZ = (internalW - tray.width) / 2;
+      const trayBottom = internalH - tray.height;
+      if (
+        overlaps(xMin, xMax, tray.x, tray.x + tray.length)
+        && overlaps(zMin, zMax, trayZ, trayZ + tray.width)
+        && overlaps(yMin, yMax, trayBottom, internalH)
+      ) {
+        addClashError(
+          `${connection.name} pipe stub clashes with dispersion tray ${trayIndex + 1}.`,
+          [connection.id, tray.id],
+        );
+      }
+    });
+  });
+
   if (state.stackFillDirection === 'top' && topDownCrateDatum === null) {
     errors.push('Top-down support configuration cannot be applied because no dispersion tray is available as the crate datum.');
   } else if (
@@ -694,6 +799,7 @@ export function useValidation(): ValidationState {
   return {
     isValid: errors.length === 0,
     warnings,
-    errors
+    errors,
+    invalidComponentIds: Array.from(invalidComponentIds),
   };
 }

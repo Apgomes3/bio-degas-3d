@@ -520,8 +520,10 @@ function CompactPipeInput({
 }
 
 function StatusPanel({ validation }: { validation: ReturnType<typeof useValidation> }) {
-  const { isValid, errors, warnings } = validation;
+  const { isValid, errors, warnings, invalidComponentIds } = validation;
+  const setSelectedId = useStore(s => s.setSelectedId);
   const [expanded, setExpanded] = useState(false);
+  const [focusedIssueIndex, setFocusedIssueIndex] = useState(0);
   
   if (isValid && warnings.length === 0) {
     return (
@@ -562,6 +564,20 @@ function StatusPanel({ validation }: { validation: ReturnType<typeof useValidati
 
       {expanded && (
         <div className="mt-3 max-h-[40vh] space-y-3 overflow-y-auto border-t border-border pt-3 pr-1">
+          {invalidComponentIds.length > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                const nextIndex = focusedIssueIndex % invalidComponentIds.length;
+                setSelectedId(invalidComponentIds[nextIndex]);
+                setFocusedIssueIndex((nextIndex + 1) % invalidComponentIds.length);
+              }}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-destructive/30 bg-destructive/10 px-2 py-1.5 text-xs font-semibold text-destructive hover:bg-destructive/15"
+            >
+              <Eye size={14} />
+              Show affected component
+            </button>
+          )}
           {!isValid && (
             <div className="flex items-start gap-3 text-destructive">
               <AlertCircle className="mt-0.5 shrink-0" size={16} />

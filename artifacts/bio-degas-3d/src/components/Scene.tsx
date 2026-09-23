@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
-import { OrbitControls, Grid, GizmoHelper, GizmoViewport } from '@react-three/drei';
+import { OrthographicCamera, PerspectiveCamera, OrbitControls, Grid, GizmoHelper, GizmoViewport } from '@react-three/drei';
 import * as THREE from 'three';
 import { calculateTopDownCrateDatum, calculateTopDownSupportDatum, calculateWaterMatchedOutletLength, TOP_DOWN_SUPPORT_CLEARANCE, type PipeConnection, useStore, useValidation } from '@/store/useStore';
 
@@ -261,15 +261,17 @@ function BioCrate({
   height,
   depth,
   isSelected,
+  isInvalid,
 }: {
   width: number;
   height: number;
   depth: number;
   isSelected: boolean;
+  isInvalid: boolean;
 }) {
-  const color = isSelected ? '#3b82f6' : '#0757a6';
-  const emissive = isSelected ? '#1d4ed8' : '#000000';
-  const emissiveIntensity = isSelected ? 0.32 : 0;
+  const color = isInvalid ? '#dc2626' : isSelected ? '#3b82f6' : '#0757a6';
+  const emissive = isInvalid ? '#7f1d1d' : isSelected ? '#1d4ed8' : '#000000';
+  const emissiveIntensity = isInvalid ? 0.45 : isSelected ? 0.32 : 0;
   const frame = Math.min(width, height, depth) * 0.075;
   const slat = frame * 0.42;
   const halfW = width / 2 - frame / 2;
@@ -352,6 +354,7 @@ function Stacks() {
   const trays = useStore(s => s.trays);
   const selectedId = useStore(s => s.selectedId);
   const setSelectedId = useStore(s => s.setSelectedId);
+  const invalidComponentIds = useValidation().invalidComponentIds;
   
   const l = crate.width / 1000;
   const w = crate.length / 1000;
@@ -424,7 +427,8 @@ function Stacks() {
       })}
       {stacks.map(stack => {
         const isSelected = selectedId === stack.id;
-        const color = isSelected ? "#3b82f6" : "#0284c7";
+        const isInvalid = invalidComponentIds.includes(stack.id);
+        const color = isInvalid ? '#dc2626' : isSelected ? "#3b82f6" : "#0284c7";
         const supportHeight = stackFillDirection === 'top'
           ? Math.max(0, (topDownSupportDatum ?? 0) / 1000)
           : 0;
@@ -453,6 +457,7 @@ function Stacks() {
                   height={h * 0.95}
                   depth={w * 0.95}
                   isSelected={isSelected}
+                  isInvalid={isInvalid}
                 />
               </group>
             ))}
@@ -471,6 +476,7 @@ function Trays() {
   const wallThickness = useStore(s => s.wallThickness);
   const selectedId = useStore(s => s.selectedId);
   const setSelectedId = useStore(s => s.setSelectedId);
+  const invalidComponentIds = useValidation().invalidComponentIds;
   const internalL = (envelope.length - 2 * wallThickness) / 1000;
   const internalW = (envelope.width - 2 * wallThickness) / 1000;
   const internalH = (envelope.height - wallThickness) / 1000;
@@ -496,6 +502,7 @@ function Trays() {
       ))}
       {trays.map((tray, i) => {
         const isSelected = selectedId === tray.id;
+        const isInvalid = invalidComponentIds.includes(tray.id);
         const l = tray.length / 1000;
         const w = tray.width / 1000;
         const h = tray.height / 1000;
@@ -510,9 +517,9 @@ function Trays() {
         const holeRadius = Math.max((tray.perforationDiameter ?? 35) / 2000, 0.006);
         const yPos = internalH - h / 2;
         const floorY = -h / 2 + plateT / 2;
-        const wallColor = isSelected ? '#d946ef' : isFinished ? '#cbd5e1' : '#9333ea';
-        const panelColor = isSelected ? '#e879f9' : isFinished ? '#84cc16' : '#a855f7';
-        const channelColor = isFinished ? '#0e7490' : '#7e22ce';
+        const wallColor = isInvalid ? '#dc2626' : isSelected ? '#d946ef' : isFinished ? '#cbd5e1' : '#9333ea';
+        const panelColor = isInvalid ? '#ef4444' : isSelected ? '#e879f9' : isFinished ? '#84cc16' : '#a855f7';
+        const channelColor = isInvalid ? '#991b1b' : isFinished ? '#0e7490' : '#7e22ce';
         
         return (
           <group 
@@ -681,6 +688,7 @@ function PipeConnections() {
   const waterLevel = useStore(s => s.waterLevel);
   const selectedId = useStore(s => s.selectedId);
   const setSelectedId = useStore(s => s.setSelectedId);
+  const invalidComponentIds = useValidation().invalidComponentIds;
   const internalL = (envelope.length - 2 * wallThickness) / 1000;
   const internalW = (envelope.width - 2 * wallThickness) / 1000;
   const internalH = (envelope.height - wallThickness) / 1000;
@@ -716,7 +724,8 @@ function PipeConnections() {
         const elbowEnd = elbowControl.clone().add(branchDirection.clone().multiplyScalar(elbowRadius));
         const branchEnd = elbowEnd.clone().add(branchDirection.multiplyScalar(outletPipeLength));
         const isSelected = selectedId === connection.id;
-        const color = isSelected ? '#f97316' : '#475569';
+        const isInvalid = invalidComponentIds.includes(connection.id);
+        const color = isInvalid ? '#dc2626' : isSelected ? '#f97316' : '#475569';
         const sketchQuaternion = new THREE.Quaternion().setFromUnitVectors(
           new THREE.Vector3(0, 0, 1),
           direction.clone().negate(),
@@ -776,12 +785,25 @@ function PipeConnections() {
 
 function CameraController({ viewMode }: { viewMode: string }) {
   const { camera, controls } = useThree();
-  
+  const envelope = useStore(s => s.envelope);
+  const wallThickness = useStore(s => s.wallThickness);
+
   useEffect(() => {
     if (!controls) return;
     const ctrl = controls as any;
+
+    const internalL = (envelope.length - 2 * wallThickness) / 1000;
+    const internalW = (envelope.width - 2 * wallThickness) / 1000;
+    const internalH = (envelope.height - wallThickness) / 1000;
+
+    const cx = internalL / 2;
+    const cy = internalH / 2 - 1;
+    const cz = internalW / 2 - 1;
+
     const target = new THREE.Vector3(4, 1, 1);
-    
+    let isSection = false;
+    const dist = 10;
+
     switch (viewMode) {
       case 'top':
         camera.position.set(4, 15, 1.01); // slight offset to prevent gimbal lock
@@ -795,12 +817,32 @@ function CameraController({ viewMode }: { viewMode: string }) {
       case 'iso':
         camera.position.set(-3, 6, 10);
         break;
+      case 'sec-long':
+        target.set(cx, cy, cz);
+        camera.position.set(cx, cy, cz + dist);
+        isSection = true;
+        break;
+      case 'sec-trans':
+        target.set(cx, cy, cz);
+        camera.position.set(cx + dist, cy, cz);
+        isSection = true;
+        break;
+    }
+
+    if (isSection) {
+      camera.near = dist;
+      camera.far = dist + 100;
+      camera.updateProjectionMatrix();
+    } else {
+      camera.near = 0.1;
+      camera.far = 1000;
+      camera.updateProjectionMatrix();
     }
     
     camera.lookAt(target);
     ctrl.target.copy(target);
     ctrl.update();
-  }, [viewMode, camera, controls]);
+  }, [viewMode, camera, controls, envelope, wallThickness]);
   
   return null;
 }
@@ -817,7 +859,125 @@ function supportsWebGL() {
   }
 }
 
-function TechnicalPlanFallback({ visualMode }: { visualMode: 'finished' | 'technical' }) {
+function TechnicalSectionFallback({ viewMode }: { viewMode: 'sec-long' | 'sec-trans' }) {
+  const envelope = useStore(s => s.envelope);
+  const wallThickness = useStore(s => s.wallThickness);
+  const waterLevel = useStore(s => s.waterLevel);
+  const stacks = useStore(s => s.stacks);
+  const trays = useStore(s => s.trays);
+  const crate = useStore(s => s.crate);
+  const stackFillDirection = useStore(s => s.stackFillDirection);
+  const topDownTrayClearance = useStore(s => s.topDownTrayClearance);
+  const internalL = envelope.length - 2 * wallThickness;
+  const internalW = envelope.width - 2 * wallThickness;
+  const internalH = envelope.height - wallThickness;
+  const plotX = 110;
+  const plotY = 90;
+  const plotW = 740;
+  const plotH = 390;
+  const horizontalExtent = viewMode === 'sec-long' ? internalL : internalW;
+  const sx = (value: number) => plotX + value / horizontalExtent * plotW;
+  const sw = (value: number) => value / horizontalExtent * plotW;
+  const sy = (value: number) => plotY + plotH - value / internalH * plotH;
+  const sh = (value: number) => value / internalH * plotH;
+  const supportDatum = calculateTopDownSupportDatum(
+    envelope,
+    wallThickness,
+    trays,
+    topDownTrayClearance,
+    stacks,
+    crate.height,
+  );
+  const stackGroups = Array.from(new Map(
+    stacks.filter(stack => stack.quantity > 0).map(stack => [
+      viewMode === 'sec-long' ? stack.col : stack.row,
+      stack,
+    ]),
+  ).values());
+
+  return (
+    <div id="coordination-canvas" className="flex h-full min-h-[480px] w-full flex-col bg-[#f3f6f8]">
+      <div className="min-h-0 flex-1 p-5">
+        <svg viewBox="0 0 960 560" className="h-full w-full rounded border border-slate-300 bg-white shadow-xl" role="img">
+          <defs>
+            <pattern id="section-grid" width="20" height="20" patternUnits="userSpaceOnUse">
+              <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#e2e8f0" strokeWidth="1" />
+            </pattern>
+          </defs>
+          <rect width="960" height="560" fill="url(#section-grid)" />
+          <text x="70" y="45" fill="#0f172a" fontSize="17" fontWeight="700">
+            {viewMode === 'sec-long' ? 'LONGITUDINAL SECTION' : 'TRANSVERSE SECTION'}
+          </text>
+          <text x="70" y="68" fill="#64748b" fontSize="12">Internal coordination · dimensions and elevations in millimetres</text>
+          <rect x={plotX} y={plotY} width={plotW} height={plotH} fill="#e0f2fe" fillOpacity=".28" stroke="#16395f" strokeWidth="4" />
+          <rect x={plotX} y={sy(waterLevel)} width={plotW} height={sh(waterLevel)} fill="#38bdf8" fillOpacity=".22" />
+          {trays.map(tray => {
+            const trayX = viewMode === 'sec-long'
+              ? sx(tray.x)
+              : sx((internalW - tray.width) / 2);
+            const trayWidth = viewMode === 'sec-long' ? sw(tray.length) : sw(tray.width);
+            return (
+              <rect
+                key={tray.id}
+                x={trayX}
+                y={sy(internalH)}
+                width={trayWidth}
+                height={sh(tray.height)}
+                fill="#9333ea"
+                fillOpacity=".72"
+                stroke="#6b21a8"
+                strokeWidth="2"
+              />
+            );
+          })}
+          {stackFillDirection === 'top' && supportDatum !== null && (
+            <line x1={plotX} y1={sy(supportDatum)} x2={plotX + plotW} y2={sy(supportDatum)} stroke="#334155" strokeWidth="8" />
+          )}
+          {stackGroups.map(stack => {
+            const base = stackFillDirection === 'top' ? Math.max(0, supportDatum ?? 0) : 0;
+            const horizontalPosition = viewMode === 'sec-long' ? stack.x : stack.y;
+            const horizontalSize = viewMode === 'sec-long' ? crate.width : crate.length;
+            return (
+              <g key={stack.id}>
+                {Array.from({ length: stack.quantity }).map((_, index) => (
+                  <rect
+                    key={index}
+                    x={sx(horizontalPosition) + 2}
+                    y={sy(base + (index + 1) * crate.height)}
+                    width={Math.max(2, sw(horizontalSize) - 4)}
+                    height={sh(crate.height) - 2}
+                    fill="#0284c7"
+                    fillOpacity=".62"
+                    stroke="#075985"
+                    strokeWidth="1.5"
+                  />
+                ))}
+              </g>
+            );
+          })}
+          <line x1={plotX} y1="510" x2={plotX + plotW} y2="510" stroke="#16395f" strokeWidth="1.5" />
+          <text x="480" y="535" textAnchor="middle" fill="#16395f" fontSize="13" fontWeight="700">
+            {horizontalExtent} INTERNAL {viewMode === 'sec-long' ? 'LENGTH' : 'WIDTH'}
+          </text>
+          <line x1="78" y1={plotY} x2="78" y2={plotY + plotH} stroke="#16395f" strokeWidth="1.5" />
+          <text x="52" y="285" textAnchor="middle" fill="#16395f" fontSize="13" fontWeight="700" transform="rotate(-90 52 285)">
+            {internalH} INTERNAL HEIGHT
+          </text>
+          {supportDatum !== null && (
+            <text x="865" y={sy(supportDatum) + 4} fill="#334155" fontSize="11" fontWeight="700">
+              SUPPORT EL. {Math.round(supportDatum)}
+            </text>
+          )}
+        </svg>
+      </div>
+    </div>
+  );
+}
+
+function TechnicalPlanFallback({ visualMode, viewMode }: { visualMode: 'finished' | 'technical'; viewMode: string }) {
+  if (viewMode === 'sec-long' || viewMode === 'sec-trans') {
+    return <TechnicalSectionFallback viewMode={viewMode} />;
+  }
   const envelope = useStore(s => s.envelope);
   const wallThickness = useStore(s => s.wallThickness);
   const accessMin = useStore(s => s.accessMin);
@@ -1031,18 +1191,24 @@ export function Scene({ viewMode = 'iso', visualMode = 'finished' }: { viewMode?
   const [webglAvailable] = useState(supportsWebGL);
 
   if (!webglAvailable) {
-    return <TechnicalPlanFallback visualMode={visualMode} />;
+    return <TechnicalPlanFallback visualMode={visualMode} viewMode={viewMode} />;
   }
+
+  const isSection = viewMode === 'sec-long' || viewMode === 'sec-trans';
 
   return (
     <VisualModeContext.Provider value={visualMode}>
       <Canvas
-        camera={{ position: [-3, 6, 10], fov: 45 }}
         onPointerMissed={() => setSelectedId(null)}
         className="w-full h-full"
         gl={{ preserveDrawingBuffer: true, antialias: true }}
         id="coordination-canvas"
       >
+        {isSection ? (
+          <OrthographicCamera makeDefault zoom={80} near={10} far={110} />
+        ) : (
+          <PerspectiveCamera makeDefault position={[-3, 6, 10]} fov={45} near={0.1} far={1000} />
+        )}
         <color attach="background" args={[visualMode === 'finished' ? '#e2e8f0' : '#f8fafc']} />
         
         {visualMode === 'finished' ? (
