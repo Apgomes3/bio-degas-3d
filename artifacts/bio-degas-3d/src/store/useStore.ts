@@ -628,7 +628,7 @@ export function useValidation(): ValidationState {
 
   if (unsupportedTopDownStacks.length > 0) {
     errors.push(
-      `Crate configuration not possible to use: ${unsupportedTopDownStacks.length} active stack${unsupportedTopDownStacks.length === 1 ? '' : 's'} cannot leave the required ${TOP_DOWN_SUPPORT_CLEARANCE}mm clearance for the FRP angles and side beams below the crates.`,
+      `Top-down support configuration cannot be applied: ${unsupportedTopDownStacks.length} active stack${unsupportedTopDownStacks.length === 1 ? '' : 's'} cannot leave the required ${TOP_DOWN_SUPPORT_CLEARANCE}mm clearance for the FRP angles and side beams. Crates remain visible for reference, but supports are hidden.`,
     );
   }
   

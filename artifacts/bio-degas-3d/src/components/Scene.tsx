@@ -290,10 +290,9 @@ function Stacks() {
     || stacks.every(stack =>
       stack.quantity <= 0
       || waterLevel - stack.quantity * crate.height >= TOP_DOWN_SUPPORT_CLEARANCE);
-  const displayedStacks = topDownConfigurationUsable ? stacks : [];
   const supportFrames = Array.from(
     new Map(
-      displayedStacks
+      (topDownConfigurationUsable ? stacks : [])
         .map(stack => ({
           stack,
           elevation: stackFillDirection === 'top'
@@ -343,7 +342,7 @@ function Stacks() {
           span={internalW - sideBeamInset * 2}
         />,
       ])}
-      {displayedStacks.map(stack => {
+      {stacks.map(stack => {
         const isSelected = selectedId === stack.id;
         const color = isSelected ? "#3b82f6" : "#0284c7";
         const supportHeight = stackFillDirection === 'top'
@@ -744,7 +743,6 @@ function TechnicalPlanFallback({ visualMode }: { visualMode: 'finished' | 'techn
     || stacks.every(stack =>
       stack.quantity <= 0
       || waterLevel - stack.quantity * crate.height >= TOP_DOWN_SUPPORT_CLEARANCE);
-  const displayedStacks = topDownConfigurationUsable ? stacks : [];
 
   return (
     <div id="coordination-canvas" className={`flex h-full min-h-[480px] w-full flex-col ${isFinished ? 'bg-slate-300' : 'bg-[#f3f6f8]'}`}>
@@ -850,7 +848,7 @@ function TechnicalPlanFallback({ visualMode }: { visualMode: 'finished' | 'techn
               </g>
             );
           })}
-          {displayedStacks.map(stack => (
+          {stacks.map(stack => (
             <g key={stack.id} onClick={() => setSelectedId(stack.id)} className="cursor-pointer">
               <rect
                 x={x(stack.x)}
@@ -874,10 +872,10 @@ function TechnicalPlanFallback({ visualMode }: { visualMode: 'finished' | 'techn
             <g>
               <rect x="275" y="260" width="410" height="76" rx="6" fill="#fef2f2" stroke="#dc2626" strokeWidth="2" />
               <text x="480" y="289" textAnchor="middle" fill="#991b1b" fontSize="14" fontWeight="700">
-                CRATE CONFIGURATION NOT POSSIBLE TO USE
+                TOP-DOWN SUPPORT CANNOT BE APPLIED
               </text>
               <text x="480" y="314" textAnchor="middle" fill="#b91c1c" fontSize="11">
-                Increase water level or reduce the number of crates per stack.
+                Crates shown for reference; support beams are hidden.
               </text>
             </g>
           )}
