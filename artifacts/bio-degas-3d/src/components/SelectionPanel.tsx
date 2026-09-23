@@ -1,4 +1,4 @@
-import { calculateTopDownCrateDatum, calculateWaterMatchedOutletLength, useStore } from '@/store/useStore';
+import { calculateTopDownSupportDatum, calculateWaterMatchedOutletLength, useStore } from '@/store/useStore';
 import { X, Layers, Box, CircleDot } from 'lucide-react';
 
 export function SelectionPanel() {
@@ -63,18 +63,20 @@ export function SelectionPanel() {
               <br/>
               Height: {stack.quantity * store.crate.height} mm
               <br/>
-              Datum: {store.stackFillDirection === 'top' ? `${store.topDownTrayClearance} mm below dispersion tray` : 'bottom-up from tank floor'}
+              Datum: {store.stackFillDirection === 'top' ? 'shared support below dispersion tray' : 'bottom-up from tank floor'}
               {store.stackFillDirection === 'top' && (
                 <>
                   <br/>
                   Clearance below FRP angle support: {Math.max(
                     0,
-                    (calculateTopDownCrateDatum(
+                    calculateTopDownSupportDatum(
                       store.envelope,
                       store.wallThickness,
                       store.trays,
                       store.topDownTrayClearance,
-                    ) ?? 0) - stack.quantity * store.crate.height,
+                      store.stacks,
+                      store.crate.height,
+                    ) ?? 0,
                   )} mm
                 </>
               )}

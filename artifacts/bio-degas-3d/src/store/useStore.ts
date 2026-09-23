@@ -196,6 +196,20 @@ export function calculateTopDownCrateDatum(
   return lowestTrayUnderside - Math.max(0, clearance);
 }
 
+export function calculateTopDownSupportDatum(
+  envelope: Envelope,
+  wallThickness: number,
+  trays: Tray[],
+  clearance: number,
+  stacks: Stack[],
+  crateHeight: number,
+) {
+  const crateTopDatum = calculateTopDownCrateDatum(envelope, wallThickness, trays, clearance);
+  if (crateTopDatum === null) return null;
+  const tallestActiveStack = Math.max(0, ...stacks.map(stack => stack.quantity));
+  return crateTopDatum - tallestActiveStack * crateHeight;
+}
+
 function generateStacks(state: Partial<ProjectState>) {
   const s = { ...DEFAULT_REFERENCE, ...state } as ProjectState;
   const internalL = s.envelope.length - 2 * s.wallThickness;
@@ -640,20 +654,24 @@ export function useValidation(): ValidationState {
     state.trays,
     state.topDownTrayClearance,
   );
-  const unsupportedTopDownStacks = state.stackFillDirection === 'top'
-    ? state.stacks.filter(stack =>
-      stack.quantity > 0
-      && (
-        topDownCrateDatum === null
-        || topDownCrateDatum - stack.quantity * state.crate.height < TOP_DOWN_SUPPORT_CLEARANCE
-      ))
-    : [];
+  const topDownSupportDatum = calculateTopDownSupportDatum(
+    state.envelope,
+    state.wallThickness,
+    state.trays,
+    state.topDownTrayClearance,
+    state.stacks,
+    state.crate.height,
+  );
 
   if (state.stackFillDirection === 'top' && topDownCrateDatum === null) {
     errors.push('Top-down support configuration cannot be applied because no dispersion tray is available as the crate datum.');
-  } else if (unsupportedTopDownStacks.length > 0) {
+  } else if (
+    state.stackFillDirection === 'top'
+    && topDownSupportDatum !== null
+    && topDownSupportDatum < TOP_DOWN_SUPPORT_CLEARANCE
+  ) {
     errors.push(
-      `Top-down support configuration cannot be applied: ${unsupportedTopDownStacks.length} active stack${unsupportedTopDownStacks.length === 1 ? '' : 's'} cannot fit ${state.topDownTrayClearance}mm below the dispersion tray while leaving the required ${TOP_DOWN_SUPPORT_CLEARANCE}mm clearance for the FRP angles and side beams. Crates remain visible for reference, but supports are hidden.`,
+      `Top-down support configuration cannot be applied: the tallest active stack cannot fit ${state.topDownTrayClearance}mm below the dispersion tray while leaving the required ${TOP_DOWN_SUPPORT_CLEARANCE}mm clearance beneath the shared FRP support level. Crates remain visible for reference, but supports are hidden.`,
     );
   }
   

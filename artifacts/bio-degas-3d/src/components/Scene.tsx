@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, Grid, GizmoHelper, GizmoViewport } from '@react-three/drei';
 import * as THREE from 'three';
-import { calculateTopDownCrateDatum, calculateWaterMatchedOutletLength, TOP_DOWN_SUPPORT_CLEARANCE, type PipeConnection, useStore, useValidation } from '@/store/useStore';
+import { calculateTopDownCrateDatum, calculateTopDownSupportDatum, calculateWaterMatchedOutletLength, TOP_DOWN_SUPPORT_CLEARANCE, type PipeConnection, useStore, useValidation } from '@/store/useStore';
 
 const VisualModeContext = createContext<'finished' | 'technical'>('finished');
 
@@ -358,18 +358,18 @@ function Stacks() {
   const h = crate.height / 1000;
   const internalW = (envelope.width - 2 * wallThickness) / 1000;
   const sideBeamInset = 0.08;
-  const topDownCrateDatum = calculateTopDownCrateDatum(
+  const topDownSupportDatum = calculateTopDownSupportDatum(
     envelope,
     wallThickness,
     trays,
     topDownTrayClearance,
+    stacks,
+    crate.height,
   );
   const topDownConfigurationUsable = stackFillDirection !== 'top'
     || (
-      topDownCrateDatum !== null
-      && stacks.every(stack =>
-        stack.quantity <= 0
-        || topDownCrateDatum - stack.quantity * crate.height >= TOP_DOWN_SUPPORT_CLEARANCE)
+      topDownSupportDatum !== null
+      && topDownSupportDatum >= TOP_DOWN_SUPPORT_CLEARANCE
     );
   const supportFrames = Array.from(
     new Map(
@@ -377,7 +377,7 @@ function Stacks() {
         .map(stack => ({
           stack,
           elevation: stackFillDirection === 'top'
-            ? Math.max(0, (topDownCrateDatum ?? 0) / 1000 - stack.quantity * h)
+            ? Math.max(0, (topDownSupportDatum ?? 0) / 1000)
             : 0,
         }))
         .filter(({ stack, elevation }) => stack.quantity > 0 && elevation > 0.01)
@@ -426,7 +426,7 @@ function Stacks() {
         const isSelected = selectedId === stack.id;
         const color = isSelected ? "#3b82f6" : "#0284c7";
         const supportHeight = stackFillDirection === 'top'
-          ? Math.max(0, (topDownCrateDatum ?? 0) / 1000 - stack.quantity * h)
+          ? Math.max(0, (topDownSupportDatum ?? 0) / 1000)
           : 0;
         
         return (
@@ -837,18 +837,18 @@ function TechnicalPlanFallback({ visualMode }: { visualMode: 'finished' | 'techn
   const sx = (value: number) => (value / internalL) * 820;
   const sy = (value: number) => (value / internalW) * 380;
   const isFinished = visualMode === 'finished';
-  const topDownCrateDatum = calculateTopDownCrateDatum(
+  const topDownSupportDatum = calculateTopDownSupportDatum(
     envelope,
     wallThickness,
     trays,
     topDownTrayClearance,
+    stacks,
+    crate.height,
   );
   const topDownConfigurationUsable = stackFillDirection !== 'top'
     || (
-      topDownCrateDatum !== null
-      && stacks.every(stack =>
-        stack.quantity <= 0
-        || topDownCrateDatum - stack.quantity * crate.height >= TOP_DOWN_SUPPORT_CLEARANCE)
+      topDownSupportDatum !== null
+      && topDownSupportDatum >= TOP_DOWN_SUPPORT_CLEARANCE
     );
 
   return (
