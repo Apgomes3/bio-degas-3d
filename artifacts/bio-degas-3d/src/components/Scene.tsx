@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, Grid, GizmoHelper, GizmoViewport } from '@react-three/drei';
 import * as THREE from 'three';
-import { calculateWaterMatchedOutletLength, type PipeConnection, useStore, useValidation } from '@/store/useStore';
+import { calculateWaterMatchedOutletLength, TOP_DOWN_SUPPORT_CLEARANCE, type PipeConnection, useStore, useValidation } from '@/store/useStore';
 
 const VisualModeContext = createContext<'finished' | 'technical'>('finished');
 
@@ -286,9 +286,14 @@ function Stacks() {
   const internalL = (envelope.length - 2 * wallThickness) / 1000;
   const internalW = (envelope.width - 2 * wallThickness) / 1000;
   const sideBeamInset = 0.08;
+  const topDownConfigurationUsable = stackFillDirection !== 'top'
+    || stacks.every(stack =>
+      stack.quantity <= 0
+      || waterLevel - stack.quantity * crate.height >= TOP_DOWN_SUPPORT_CLEARANCE);
+  const displayedStacks = topDownConfigurationUsable ? stacks : [];
   const supportFrames = Array.from(
     new Map(
-      stacks
+      displayedStacks
         .map(stack => ({
           stack,
           elevation: stackFillDirection === 'top'
@@ -338,7 +343,7 @@ function Stacks() {
           span={internalW - sideBeamInset * 2}
         />,
       ])}
-      {stacks.map(stack => {
+      {displayedStacks.map(stack => {
         const isSelected = selectedId === stack.id;
         const color = isSelected ? "#3b82f6" : "#0284c7";
         const supportHeight = stackFillDirection === 'top'
@@ -723,6 +728,8 @@ function TechnicalPlanFallback({ visualMode }: { visualMode: 'finished' | 'techn
   const trays = useStore(s => s.trays);
   const pipeConnections = useStore(s => s.pipeConnections);
   const crate = useStore(s => s.crate);
+  const waterLevel = useStore(s => s.waterLevel);
+  const stackFillDirection = useStore(s => s.stackFillDirection);
   const selectedId = useStore(s => s.selectedId);
   const setSelectedId = useStore(s => s.setSelectedId);
   const validation = useValidation();
@@ -733,6 +740,11 @@ function TechnicalPlanFallback({ visualMode }: { visualMode: 'finished' | 'techn
   const sx = (value: number) => (value / internalL) * 820;
   const sy = (value: number) => (value / internalW) * 380;
   const isFinished = visualMode === 'finished';
+  const topDownConfigurationUsable = stackFillDirection !== 'top'
+    || stacks.every(stack =>
+      stack.quantity <= 0
+      || waterLevel - stack.quantity * crate.height >= TOP_DOWN_SUPPORT_CLEARANCE);
+  const displayedStacks = topDownConfigurationUsable ? stacks : [];
 
   return (
     <div id="coordination-canvas" className={`flex h-full min-h-[480px] w-full flex-col ${isFinished ? 'bg-slate-300' : 'bg-[#f3f6f8]'}`}>
@@ -838,7 +850,7 @@ function TechnicalPlanFallback({ visualMode }: { visualMode: 'finished' | 'techn
               </g>
             );
           })}
-          {stacks.map(stack => (
+          {displayedStacks.map(stack => (
             <g key={stack.id} onClick={() => setSelectedId(stack.id)} className="cursor-pointer">
               <rect
                 x={x(stack.x)}
@@ -858,6 +870,17 @@ function TechnicalPlanFallback({ visualMode }: { visualMode: 'finished' | 'techn
               </text>
             </g>
           ))}
+          {!topDownConfigurationUsable && (
+            <g>
+              <rect x="275" y="260" width="410" height="76" rx="6" fill="#fef2f2" stroke="#dc2626" strokeWidth="2" />
+              <text x="480" y="289" textAnchor="middle" fill="#991b1b" fontSize="14" fontWeight="700">
+                CRATE CONFIGURATION NOT POSSIBLE TO USE
+              </text>
+              <text x="480" y="314" textAnchor="middle" fill="#b91c1c" fontSize="11">
+                Increase water level or reduce the number of crates per stack.
+              </text>
+            </g>
+          )}
           {!isFinished && (
             <>
               <line x1="70" y1="522" x2="890" y2="522" stroke="#16395f" strokeWidth="1.5" />

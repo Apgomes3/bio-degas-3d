@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 
+export const TOP_DOWN_SUPPORT_CLEARANCE = 180;
+
 export interface Envelope {
   length: number;
   width: number;
@@ -618,14 +620,22 @@ export function useValidation(): ValidationState {
   // 6. Stack Validation
   const cols = Math.floor((internalL - state.accessMin) / state.crate.width);
   const rows = Math.floor(internalW / state.crate.length);
+  const unsupportedTopDownStacks = state.stackFillDirection === 'top'
+    ? state.stacks.filter(stack =>
+      stack.quantity > 0
+      && state.waterLevel - stack.quantity * state.crate.height < TOP_DOWN_SUPPORT_CLEARANCE)
+    : [];
+
+  if (unsupportedTopDownStacks.length > 0) {
+    errors.push(
+      `Crate configuration not possible to use: ${unsupportedTopDownStacks.length} active stack${unsupportedTopDownStacks.length === 1 ? '' : 's'} cannot leave the required ${TOP_DOWN_SUPPORT_CLEARANCE}mm clearance for the FRP angles and side beams below the crates.`,
+    );
+  }
   
   let validPositions = 0;
   state.stacks.forEach(s => {
     if (s.quantity > state.maxStackHeight) {
       errors.push(`Stack at row ${s.row}, col ${s.col} exceeds max height (${state.maxStackHeight}).`);
-    }
-    if (state.stackFillDirection === 'top' && s.quantity * state.crate.height > state.waterLevel) {
-      errors.push(`Stack at row ${s.row}, col ${s.col} is taller than the available top-down water-level datum.`);
     }
     if (s.col >= cols || s.row >= rows) {
       errors.push(`Stack at row ${s.row}, col ${s.col} is outside valid area.`);
