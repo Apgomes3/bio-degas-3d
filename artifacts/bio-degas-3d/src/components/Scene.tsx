@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, Grid, GizmoHelper, GizmoViewport } from '@react-three/drei';
 import * as THREE from 'three';
@@ -142,6 +142,132 @@ function FrpAnglePair({
   );
 }
 
+type BarPosition = [number, number, number];
+
+function InstancedBars({
+  size,
+  positions,
+  color,
+  emissive,
+  emissiveIntensity,
+}: {
+  size: [number, number, number];
+  positions: BarPosition[];
+  color: string;
+  emissive: string;
+  emissiveIntensity: number;
+}) {
+  const meshRef = useRef<THREE.InstancedMesh>(null);
+
+  useLayoutEffect(() => {
+    if (!meshRef.current) return;
+    const matrix = new THREE.Matrix4();
+    positions.forEach((position, index) => {
+      matrix.makeTranslation(position[0], position[1], position[2]);
+      meshRef.current?.setMatrixAt(index, matrix);
+    });
+    meshRef.current.instanceMatrix.needsUpdate = true;
+    meshRef.current.computeBoundingSphere();
+  }, [positions]);
+
+  return (
+    <instancedMesh ref={meshRef} args={[undefined, undefined, positions.length]} castShadow receiveShadow>
+      <boxGeometry args={size} />
+      <meshStandardMaterial
+        color={color}
+        emissive={emissive}
+        emissiveIntensity={emissiveIntensity}
+        roughness={0.62}
+        metalness={0.08}
+      />
+    </instancedMesh>
+  );
+}
+
+function BioCrate({
+  width,
+  height,
+  depth,
+  isSelected,
+}: {
+  width: number;
+  height: number;
+  depth: number;
+  isSelected: boolean;
+}) {
+  const color = isSelected ? '#3b82f6' : '#0757a6';
+  const emissive = isSelected ? '#1d4ed8' : '#000000';
+  const emissiveIntensity = isSelected ? 0.32 : 0;
+  const frame = Math.min(width, height, depth) * 0.075;
+  const slat = frame * 0.42;
+  const halfW = width / 2 - frame / 2;
+  const halfH = height / 2 - frame / 2;
+  const halfD = depth / 2 - frame / 2;
+  const wallSlatHeight = Math.max(frame, height - frame * 2.5);
+  const xSlatCount = Math.max(5, Math.round(width / 0.075));
+  const zSlatCount = Math.max(6, Math.round(depth / 0.09));
+  const xStep = (width - frame * 3) / (xSlatCount + 1);
+  const zStep = (depth - frame * 3) / (zSlatCount + 1);
+  const xSlats = Array.from({ length: xSlatCount }, (_, index) =>
+    -width / 2 + frame * 1.5 + xStep * (index + 1));
+  const zSlats = Array.from({ length: zSlatCount }, (_, index) =>
+    -depth / 2 + frame * 1.5 + zStep * (index + 1));
+  const ribHeights = [-height * 0.22, 0, height * 0.22];
+
+  const cornerPosts: BarPosition[] = [
+    [-halfW, 0, -halfD],
+    [-halfW, 0, halfD],
+    [halfW, 0, -halfD],
+    [halfW, 0, halfD],
+  ];
+  const xRails: BarPosition[] = [
+    [0, -halfH, -halfD],
+    [0, -halfH, halfD],
+    [0, halfH, -halfD],
+    [0, halfH, halfD],
+  ];
+  const zRails: BarPosition[] = [
+    [-halfW, -halfH, 0],
+    [halfW, -halfH, 0],
+    [-halfW, halfH, 0],
+    [halfW, halfH, 0],
+  ];
+  const frontBackSlats: BarPosition[] = xSlats.flatMap(x => [
+    [x, 0, -halfD],
+    [x, 0, halfD],
+  ]);
+  const sideSlats: BarPosition[] = zSlats.flatMap(z => [
+    [-halfW, 0, z],
+    [halfW, 0, z],
+  ]);
+  const xRibs: BarPosition[] = ribHeights.flatMap(y => [
+    [0, y, -halfD],
+    [0, y, halfD],
+  ]);
+  const zRibs: BarPosition[] = ribHeights.flatMap(y => [
+    [-halfW, y, 0],
+    [halfW, y, 0],
+  ]);
+  const floorSlats: BarPosition[] = xSlats
+    .filter((_, index) => index % 2 === 0)
+    .map(x => [x, -height / 2 + frame, 0]);
+
+  const materialProps = { color, emissive, emissiveIntensity };
+
+  return (
+    <group>
+      <InstancedBars size={[frame, height, frame]} positions={cornerPosts} {...materialProps} />
+      <InstancedBars size={[width, frame, frame]} positions={xRails} {...materialProps} />
+      <InstancedBars size={[frame, frame, depth]} positions={zRails} {...materialProps} />
+      <InstancedBars size={[slat, wallSlatHeight, slat]} positions={frontBackSlats} {...materialProps} />
+      <InstancedBars size={[slat, wallSlatHeight, slat]} positions={sideSlats} {...materialProps} />
+      <InstancedBars size={[width - frame * 2, slat, slat]} positions={xRibs} {...materialProps} />
+      <InstancedBars size={[slat, slat, depth - frame * 2]} positions={zRibs} {...materialProps} />
+      <InstancedBars size={[slat, frame * 0.55, depth - frame * 2]} positions={floorSlats} {...materialProps} />
+    </group>
+  );
+}
+
 function Stacks() {
   const mode = useContext(VisualModeContext);
   const isFinished = mode === 'finished';
@@ -215,7 +341,6 @@ function Stacks() {
       {stacks.map(stack => {
         const isSelected = selectedId === stack.id;
         const color = isSelected ? "#3b82f6" : "#0284c7";
-        const emissive = isSelected ? "#2563eb" : "#000000";
         const supportHeight = stackFillDirection === 'top'
           ? Math.max(0, waterLevel / 1000 - stack.quantity * h)
           : 0;
@@ -238,30 +363,14 @@ function Stacks() {
             </mesh>
 
             {Array.from({ length: stack.quantity }).map((_, i) => (
-              <mesh key={i} position={[0, supportHeight + i * h + h / 2, 0]}>
-                <boxGeometry args={[l * 0.95, h * 0.95, w * 0.95]} />
-                {isFinished ? (
-                  <meshStandardMaterial 
-                    color={isSelected ? "#3b82f6" : "#0f172a"} 
-                    emissive={isSelected ? "#1d4ed8" : "#000000"} 
-                    emissiveIntensity={isSelected ? 0.2 : 0} 
-                    roughness={0.7} 
-                    metalness={0.1} 
-                  />
-                ) : (
-                  <meshStandardMaterial color={color} emissive={emissive} emissiveIntensity={isSelected ? 0.4 : 0} roughness={0.7} metalness={0.2} />
-                )}
-                {(!isFinished || isSelected) && (
-                  <lineSegments>
-                    <edgesGeometry args={[new THREE.BoxGeometry(l * 0.95, h * 0.95, w * 0.95)]} />
-                    {isFinished ? (
-                      <lineBasicMaterial color="#60a5fa" opacity={0.9} transparent />
-                    ) : (
-                      <lineBasicMaterial color="#ffffff" opacity={isSelected ? 0.8 : 0.3} transparent />
-                    )}
-                  </lineSegments>
-                )}
-              </mesh>
+              <group key={i} position={[0, supportHeight + i * h + h / 2, 0]}>
+                <BioCrate
+                  width={l * 0.95}
+                  height={h * 0.95}
+                  depth={w * 0.95}
+                  isSelected={isSelected}
+                />
+              </group>
             ))}
           </group>
         );
