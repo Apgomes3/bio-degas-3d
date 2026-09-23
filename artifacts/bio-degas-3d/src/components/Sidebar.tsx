@@ -1,5 +1,5 @@
 import { calculateWaterMatchedOutletLength, PIPE_FACES, type PipeFace, useStore, useValidation, ProjectState } from '@/store/useStore';
-import { Settings, Save, FolderOpen, RefreshCcw, AlertTriangle, AlertCircle, CheckCircle2, Download, Camera, Plus, Trash2, Eye, CircleDot } from 'lucide-react';
+import { Settings, Save, FolderOpen, RefreshCcw, AlertTriangle, AlertCircle, CheckCircle2, Download, Camera, Plus, Trash2, Eye, CircleDot, ChevronDown, ChevronUp } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -510,6 +510,7 @@ function CompactPipeInput({
 
 function StatusPanel({ validation }: { validation: ReturnType<typeof useValidation> }) {
   const { isValid, errors, warnings } = validation;
+  const [expanded, setExpanded] = useState(false);
   
   if (isValid && warnings.length === 0) {
     return (
@@ -524,28 +525,55 @@ function StatusPanel({ validation }: { validation: ReturnType<typeof useValidati
   }
 
   return (
-    <div className="space-y-3">
-      {!isValid && (
-        <div className="flex items-start gap-3 text-destructive">
-          <AlertCircle className="mt-0.5 shrink-0" size={18} />
-          <div>
-            <p className="text-sm font-bold">Errors ({errors.length})</p>
-            <ul className="text-xs mt-1 space-y-1 opacity-90 list-disc pl-3">
-              {errors.map((e, i) => <li key={i}>{e}</li>)}
-            </ul>
-          </div>
-        </div>
-      )}
-      
-      {warnings.length > 0 && (
-        <div className="flex items-start gap-3 text-amber-600 dark:text-amber-500">
-          <AlertTriangle className="mt-0.5 shrink-0" size={18} />
-          <div>
-            <p className="text-sm font-bold">Warnings ({warnings.length})</p>
-            <ul className="text-xs mt-1 space-y-1 opacity-90 list-disc pl-3">
-              {warnings.map((w, i) => <li key={i}>{w}</li>)}
-            </ul>
-          </div>
+    <div>
+      <button
+        type="button"
+        onClick={() => setExpanded(current => !current)}
+        aria-expanded={expanded}
+        data-testid="button-toggle-validation"
+        className="flex w-full items-center gap-2 rounded-md text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      >
+        {!isValid ? (
+          <AlertCircle className="shrink-0 text-destructive" size={18} />
+        ) : (
+          <AlertTriangle className="shrink-0 text-amber-600 dark:text-amber-500" size={18} />
+        )}
+        <span className="min-w-0 flex-1 text-sm font-bold text-foreground">
+          {errors.length > 0 && `${errors.length} error${errors.length === 1 ? '' : 's'}`}
+          {errors.length > 0 && warnings.length > 0 && ' · '}
+          {warnings.length > 0 && `${warnings.length} warning${warnings.length === 1 ? '' : 's'}`}
+        </span>
+        <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+          {expanded ? 'Hide' : 'Show'}
+        </span>
+        {expanded ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+      </button>
+
+      {expanded && (
+        <div className="mt-3 max-h-[40vh] space-y-3 overflow-y-auto border-t border-border pt-3 pr-1">
+          {!isValid && (
+            <div className="flex items-start gap-3 text-destructive">
+              <AlertCircle className="mt-0.5 shrink-0" size={16} />
+              <div>
+                <p className="text-xs font-bold">Errors ({errors.length})</p>
+                <ul className="mt-1 space-y-1 pl-3 text-xs opacity-90 list-disc">
+                  {errors.map((error, index) => <li key={index}>{error}</li>)}
+                </ul>
+              </div>
+            </div>
+          )}
+
+          {warnings.length > 0 && (
+            <div className="flex items-start gap-3 text-amber-600 dark:text-amber-500">
+              <AlertTriangle className="mt-0.5 shrink-0" size={16} />
+              <div>
+                <p className="text-xs font-bold">Warnings ({warnings.length})</p>
+                <ul className="mt-1 space-y-1 pl-3 text-xs opacity-90 list-disc">
+                  {warnings.map((warning, index) => <li key={index}>{warning}</li>)}
+                </ul>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
