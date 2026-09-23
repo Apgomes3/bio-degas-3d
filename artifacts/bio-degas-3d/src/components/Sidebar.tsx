@@ -1,6 +1,6 @@
-import { calculateWaterMatchedOutletLength, PIPE_FACES, type PipeFace, useStore, useValidation, ProjectState } from '@/store/useStore';
+import { calculateTopDownSupportDatum, calculateWaterMatchedOutletLength, PIPE_FACES, TOP_DOWN_SUPPORT_CLEARANCE, type PipeFace, useStore, useValidation, ProjectState } from '@/store/useStore';
 import { Settings, Save, FolderOpen, RefreshCcw, AlertTriangle, AlertCircle, CheckCircle2, Download, Camera, Plus, Trash2, Eye, CircleDot, ChevronDown, ChevronUp } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
 export function Sidebar() {
@@ -175,7 +175,10 @@ export function Sidebar() {
             </Section>
           </>
         ) : (
-          <SaveManager />
+          <>
+            <BOMSchedule store={store} />
+            <SaveManager />
+          </>
         )}
       </div>
 
@@ -762,6 +765,190 @@ function SaveManager() {
             ))}
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+function BOMSchedule({ store }: { store: ProjectState }) {
+  const bomItems = useMemo(() => {
+    const items: { id: string; category: string; description: string; quantity: number; dimensions?: string; remarks?: string }[] = [];
+
+    // Biocrates
+    const activeCrates = store.stacks.reduce((sum, s) => sum + s.quantity, 0);
+    if (activeCrates > 0) {
+      items.push({
+        id: 'biocrates',
+        category: 'Media',
+        description: 'Structured Biocrates',
+        quantity: activeCrates,
+        dimensions: `${store.crate.length} × ${store.crate.width} × ${store.crate.height} mm`,
+        remarks: `Total active stacks: ${store.stacks.filter(s => s.quantity > 0).length}`
+      });
+    }
+
+    // Dispersion Trays
+    store.trays.forEach((tray, i) => {
+      items.push({
+        id: `tray-${tray.id}`,
+        category: 'Distribution',
+        description: `Dispersion Tray ${i + 1}`,
+        quantity: 1,
+        dimensions: `${tray.length} × ${tray.width} × ${tray.height} mm`,
+        remarks: `${tray.perforationRows * tray.perforationColumns} holes Ø${tray.perforationDiameter}`
+      });
+    });
+
+    const internalLength = store.envelope.length - 2 * store.wallThickness;
+    const internalHeight = store.envelope.height - store.wallThickness;
+    const traySupportLevels = Array.from(new Set(
+      store.trays.map(tray => internalHeight - tray.height),
+    ));
+    if (traySupportLevels.length > 0) {
+      items.push({
+        id: 'tray-wall-support-beams',
+        category: 'Structural',
+        description: 'Dispersion tray wall-support beams',
+        quantity: traySupportLevels.length * 2,
+        dimensions: `50 × 100 × ${internalLength} mm`,
+        remarks: `${traySupportLevels.length} support level${traySupportLevels.length === 1 ? '' : 's'} · two longitudinal beams per level`,
+      });
+    }
+
+    // Top-down crate supports and boundary angles
+    const activeStacks = store.stacks.filter(s => s.quantity > 0);
+    const topDownSupportDatum = calculateTopDownSupportDatum(
+      store.envelope,
+      store.wallThickness,
+      store.trays,
+      store.topDownTrayClearance,
+      store.stacks,
+      store.crate.height,
+    );
+    if (
+      store.stackFillDirection === 'top'
+      && activeStacks.length > 0
+      && topDownSupportDatum !== null
+      && topDownSupportDatum >= TOP_DOWN_SUPPORT_CLEARANCE
+    ) {
+      const activeColumns = Array.from(new Map(
+        activeStacks.map(stack => [stack.col, stack]),
+      ).values());
+      const supportBoundaries = new Set<number>();
+      activeColumns.forEach(stack => {
+        supportBoundaries.add(stack.x);
+        supportBoundaries.add(stack.x + store.crate.width);
+      });
+
+      items.push({
+        id: 'crate-side-beam-segments',
+        category: 'Structural',
+        description: 'Crate support side-beam segments',
+        quantity: activeColumns.length * 2,
+        dimensions: `140 × 100 × ${store.crate.width} mm`,
+        remarks: `${activeColumns.length} active column${activeColumns.length === 1 ? '' : 's'} · shared elevation ${topDownSupportDatum} mm`,
+      });
+
+      items.push({
+        id: 'crate-frp-angle-pairs',
+        category: 'Structural',
+        description: 'Crate support FRP angle pairs',
+        quantity: supportBoundaries.size,
+        dimensions: '70 × 70 mm',
+        remarks: 'One pair at each unique stack boundary',
+      });
+    }
+
+    // Pipe Connections
+    store.pipeConnections.forEach(pc => {
+      const waterMatchedLength = calculateWaterMatchedOutletLength(
+        pc,
+        store.envelope,
+        store.wallThickness,
+        store.waterLevel,
+      );
+      const internalLength = pc.matchWaterLevel && waterMatchedLength !== null
+        ? Math.round(waterMatchedLength)
+        : pc.outletPipeLength;
+
+      items.push({
+        id: `pipe-${pc.id}`,
+        category: 'Piping',
+        description: `Pipe Connection: ${pc.name}`,
+        quantity: 1,
+        dimensions: `Coring Ø${pc.coringDiameter} / Pipe Ø${pc.diameter}`,
+        remarks: `Stub: ${pc.pipeLength}mm, Int: ${internalLength}mm`
+      });
+    });
+
+    return items;
+  }, [store.stacks, store.trays, store.pipeConnections, store.crate, store.envelope, store.wallThickness, store.waterLevel, store.stackFillDirection, store.topDownTrayClearance]);
+
+  const exportCsv = () => {
+    const headers = ['Category', 'Description', 'Quantity', 'Dimensions', 'Remarks'];
+    const rows = bomItems.map(item => [
+      item.category,
+      item.description,
+      item.quantity.toString(),
+      item.dimensions || '',
+      item.remarks || ''
+    ].map(val => `"${val.replace(/"/g, '""')}"`).join(','));
+
+    const csv = [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'biodegas_equipment_schedule.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const categories = Array.from(new Set(bomItems.map(i => i.category)));
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between border-b border-border pb-1">
+        <h3 className="text-sm font-bold uppercase tracking-wider text-foreground">Bill of Materials</h3>
+        <button
+          onClick={exportCsv}
+          className="inline-flex items-center gap-1 rounded bg-muted/50 px-2 py-0.5 text-[10px] font-semibold text-foreground hover:bg-muted transition-colors border border-border"
+        >
+          <Download size={10} />
+          CSV
+        </button>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] text-muted-foreground font-semibold">{bomItems.length} items tracked automatically</span>
+      </div>
+
+      <div className="space-y-3 pb-2">
+        {categories.length === 0 && (
+          <p className="text-xs text-muted-foreground italic">No equipment modeled.</p>
+        )}
+        {categories.map(category => (
+          <div key={category} className="space-y-1.5">
+            <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground border-b border-border/40 pb-0.5">{category}</h4>
+            <div className="space-y-1">
+              {bomItems.filter(i => i.category === category).map(item => (
+                <div key={item.id} className="rounded-[4px] border border-border/60 bg-muted/10 p-2 flex flex-col gap-1 transition-colors hover:bg-muted/20">
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="text-[11px] font-bold text-foreground leading-tight">{item.description}</span>
+                    <span className="text-[10px] font-mono font-bold bg-primary/10 border border-primary/20 text-primary px-1.5 py-0.5 rounded-[3px] shrink-0 min-w-[20px] text-center">{item.quantity}</span>
+                  </div>
+                  {(item.dimensions || item.remarks) && (
+                    <div className="text-[9px] text-muted-foreground leading-snug flex flex-col gap-0.5">
+                      {item.dimensions && <span className="font-mono text-[9.5px] text-foreground/85 font-medium">{item.dimensions}</span>}
+                      {item.remarks && <span className="opacity-80">{item.remarks}</span>}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
